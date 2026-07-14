@@ -1,0 +1,72 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: rubikoslav-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  VERCEL_ORG_ID: team_92HtIdnyTnVtduxORyV3Vq3K
+  VERCEL_PROJECT_ID: prj_9P2N1w5vfU38EVJcsleqRZyGqkA8
+
+jobs:
+  deploy:
+    name: Test and deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://rubikoslav.vercel.app
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          version: "0.11.28"
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install locked project
+        run: uv sync --locked
+
+      - name: Test solver and native replay
+        run: |
+          uv run python -m unittest discover -s python/tests -v
+          uv run rubikoslav doctor --strict
+
+      - name: Install Node and Vercel CLI
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Install pinned Vercel CLI
+        run: npm install --global vercel@54.17.1
+
+      - name: Pull production settings
+        run: vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
+
+      - name: Build production output
+        run: vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}"
+
+      - name: Deploy production output
+        id: deploy
+        shell: bash
+        run: |
+          deployment_url="$(vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}")"
+          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
+
+      - name: Keep the clean production address
+        run: vercel alias set "${{ steps.deploy.outputs.url }}" rubikoslav.vercel.app --token="${{ secrets.VERCEL_TOKEN }}"
+
+      - name: Remove the retired project address
+        shell: bash
+        run: vercel alias rm rubiks-solver-nine.vercel.app --yes --token="${{ secrets.VERCEL_TOKEN }}" || true

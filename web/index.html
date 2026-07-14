@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Rubikoslav is a Rubik's Cube solver with verified routes and 3D playback">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%23c8ff38%22/><rect x=%222%22 y=%222%22 width=%225%22 height=%225%22 fill=%22%230a0b0d%22/></svg>">
+  <title>Rubikoslav</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <main>
+    <section class="workspace">
+      <div class="stage-panel">
+        <div class="stage-toolbar">
+          <span id="move-counter" class="counter">Solved position</span>
+          <div class="view-actions">
+            <button id="reset-view" class="icon-button" type="button" title="Reset camera"
+              aria-label="Reset camera">↻</button>
+          </div>
+        </div>
+
+        <div id="cube-scene" class="cube-scene" aria-label="Interactive 3D Rubik's Cube">
+          <div id="cube" class="cube"></div>
+        </div>
+
+        <p class="drag-hint">Drag to rotate the view</p>
+
+      </div>
+
+      <aside class="control-panel">
+        <section class="control-section">
+          <div class="section-heading">
+            <h2>Make a position</h2>
+            <div class="section-actions">
+              <button id="scramble" class="secondary-button" type="button">Scramble</button>
+              <button id="open-route" class="secondary-button" type="button">Load route</button>
+              <button id="reset-position" class="secondary-button" type="button">Reset</button>
+            </div>
+          </div>
+          <div id="move-pad" class="move-pad"></div>
+          <div class="move-feed">
+            <div class="move-feed-heading">
+              <span id="timeline-label">Your moves</span>
+              <span id="timeline-count">0 moves</span>
+            </div>
+            <div id="timeline" class="timeline" aria-label="Move timeline" aria-live="polite"></div>
+          </div>
+          <div class="playback" aria-label="Solution playback controls">
+            <button id="previous-move" class="transport" type="button" aria-label="Previous move">←</button>
+            <button id="play-solution" class="play" type="button"
+              aria-label="Solve and play current position">Play</button>
+            <button id="next-move" class="transport" type="button" aria-label="Next move">→</button>
+            <label class="speed-control">Speed
+              <select id="playback-speed">
+                <option value="900">Slow</option>
+                <option value="500" selected>Normal</option>
+                <option value="240">Fast</option>
+              </select>
+            </label>
+          </div>
+          <p id="input-message" class="input-message" role="status"></p>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <dialog id="route-dialog">
+    <form id="route-form">
+      <div class="dialog-heading">
+        <h2>Load your own route</h2>
+        <button id="cancel-route-top" class="icon-button" type="button" aria-label="Close route loader">×</button>
+      </div>
+      <p>Use notation such as <code>R U R' U'</code>. Unambiguous compact engine codes work too.</p>
+      <label for="solution-input">Route</label>
+      <input id="solution-input" type="text" spellcheck="false" autocomplete="off" placeholder="R U R' U' F2">
+      <p id="route-message" class="input-message" role="status"></p>
+      <div class="inline-actions dialog-actions">
+        <button id="load-solution" class="primary-button" type="submit">Load route</button>
+        <button id="cancel-route" class="secondary-button" type="button">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+
+</html>

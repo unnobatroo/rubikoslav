@@ -1,0 +1,3 @@
+add_executable(RubikoslavCoreTests CubeTests.cpp)
+target_link_libraries(RubikoslavCoreTests PRIVATE Rubikoslav::Core)
+add_test(NAME RubikoslavCoreTests COMMAND RubikoslavCoreTests)
