@@ -22,6 +22,7 @@ _WEB_DIRECTORY = Path(__file__).resolve().parents[1] / "web"
 _STATIC_FILES = {
     "/": _WEB_DIRECTORY / "index.html",
     "/index.html": _WEB_DIRECTORY / "index.html",
+    "/api.html": _WEB_DIRECTORY / "api.html",
     "/styles.css": _WEB_DIRECTORY / "styles.css",
     "/app.js": _WEB_DIRECTORY / "app.js",
     "/generated/cube-data.js": _WEB_DIRECTORY / "generated" / "cube-data.js",

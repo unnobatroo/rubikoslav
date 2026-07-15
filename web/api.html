@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="How to use the Rubikoslav Python API and local solve endpoint">
+  <title>Python API · Rubikoslav</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <main class="docs-shell">
+    <a class="docs-back" href="index.html">← Back to the cube</a>
+
+    <h1 class="docs-title">Python API</h1>
+    <p class="docs-lead">
+      Python runs the search and asks the C++ cube model to check the answer. JavaScript sends the current position,
+      receives the verified moves, and animates them.
+    </p>
+
+    <div class="docs-grid">
+      <section class="docs-card">
+        <h2>Use it from Python</h2>
+        <p>Build a position with normal cube notation, pass its 48 stickers to the solver, then read the returned moves.</p>
+        <pre><code>from rubikoslav import CuboslavWrapper, Rubikoslav
+
+cube = CuboslavWrapper()
+for move in ("R", "U", "F2"):
+    cube.move(move)
+
+result = Rubikoslav().solve(cube.getCube())
+
+if result.success:
+    print(result.moves)
+    print(result.optimal)
+else:
+    print(result.error)</code></pre>
+        <p class="docs-note">Run the file with <code>uv run python your_file.py</code>.</p>
+      </section>
+
+      <section class="docs-card">
+        <h2>What happens during a solve</h2>
+        <ol>
+          <li><code>CuboslavWrapper</code> holds the real 48-sticker cube state in C++.</li>
+          <li><code>Rubikoslav.solve()</code> translates that state and searches for a route.</li>
+          <li>The route is replayed through the C++ cube. A route that does not finish solved is rejected.</li>
+          <li>The result reports the moves, elapsed time, backend, and whether the shortest route was proven.</li>
+        </ol>
+      </section>
+
+      <section class="docs-card">
+        <h2>Call the local HTTP endpoint</h2>
+        <p>Start the app with <code>uv run rubikoslav --no-open</code>. The server accepts the same data used by the browser.</p>
+        <pre><code>import json
+from urllib.request import Request, urlopen
+from rubikoslav import CuboslavWrapper
+
+history = ["R", "U"]
+cube = CuboslavWrapper()
+for move in history:
+    cube.move(move)
+
+body = json.dumps({
+    "state": list(cube.getCube()),
+    "history": history,
+}).encode()
+
+request = Request(
+    "http://127.0.0.1:4173/api/solve",
+    data=body,
+    headers={"Content-Type": "application/json"},
+)
+
+with urlopen(request) as response:
+    print(json.load(response))</code></pre>
+        <p>
+          <code>state</code> is required. <code>history</code> is optional, but lets the two-second web solver return a
+          fast, C++-verified route when proving the shortest deep solution would take too long.
+        </p>
+      </section>
+    </div>
+
+    <div class="docs-footer">
+      <span>Created by <a class="docs-source" href="https://github.com/unnobatroo" target="_blank" rel="author noreferrer">Jaloliddin Ismailov</a> · GPL-3.0</span>
+      <a class="docs-source" href="https://github.com/unnobatroo/rubikoslav" target="_blank" rel="noreferrer">Source code ↗</a>
+    </div>
+  </main>
+</body>
+
+</html>
