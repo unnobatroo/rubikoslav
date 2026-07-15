@@ -43,7 +43,7 @@ class CliTests(unittest.TestCase):
         self.assertNotIn("ENGINE VISUALIZER", html)
         self.assertNotIn("Read the engine", html)
         self.assertNotIn('id="position-status"', html)
-        self.assertNotIn('<header', html)
+        self.assertNotIn("<header", html)
         self.assertNotIn('id="solver-status"', html)
         self.assertIn('id="open-route"', html)
         self.assertIn('id="reset-position"', html)
@@ -60,24 +60,26 @@ class CliTests(unittest.TestCase):
         )
         self.assertLess(html.index('id="reset-position"'), html.index('id="timeline"'))
         section_actions = html[
-            html.index('class="section-actions"'):html.index('id="move-pad"')
+            html.index('class="section-actions"') : html.index('id="move-pad"')
         ]
         self.assertNotIn('id="reset-position"', section_actions)
         self.assertIn('id="icon-shuffle"', html)
         self.assertIn('id="icon-route"', html)
         self.assertIn('id="icon-play"', html)
         self.assertIn("setButtonContent(playButton, 'pause', 'Pause')", script)
-        self.assertIn('bottom: 22px', styles)
-        self.assertIn('width: min(54vw, 560px)', styles)
-        self.assertIn('grid-template-rows: auto minmax(456px, 1fr)', styles)
-        self.assertNotIn('  height: 456px;', styles)
-        self.assertIn('--cube-lift: -66px', styles)
-        self.assertIn('--cube-lift: -22px', styles)
-        self.assertIn('translateY(var(--cube-lift)) rotateX', script)
+        self.assertIn("bottom: 22px", styles)
+        self.assertIn("width: min(54vw, 560px)", styles)
+        self.assertIn("grid-template-rows: auto minmax(456px, 1fr)", styles)
+        self.assertNotIn("  height: 456px;", styles)
+        self.assertIn("--cube-lift: -66px", styles)
+        self.assertIn("--cube-lift: -22px", styles)
+        self.assertIn("translateY(var(--cube-lift)) rotateX", script)
         self.assertIn("let positionMoves = []", script)
         self.assertIn("positionMoves.push(move)", script)
         self.assertIn("history: positionMoves", script)
-        self.assertIn("payload.optimal ? 'Shortest route proven' : 'Fast route'", script)
+        self.assertIn(
+            "payload.optimal ? 'Shortest route proven' : 'Fast route'", script
+        )
         self.assertIn("showMessage('Position and move history reset.'", script)
         self.assertIn("routeKind = 'solution'", script)
         self.assertIn("movePermutations[standard] ? standard", script)
@@ -104,20 +106,36 @@ class CliTests(unittest.TestCase):
         expected_lines = {
             "U": {face: ({0, 1, 2} if face in "LFRB" else set()) for face in "ULFDRB"},
             "L": {
-                "U": {0, 3, 6}, "L": set(), "F": {0, 3, 6},
-                "D": {0, 3, 6}, "R": set(), "B": {2, 5, 8},
+                "U": {0, 3, 6},
+                "L": set(),
+                "F": {0, 3, 6},
+                "D": {0, 3, 6},
+                "R": set(),
+                "B": {2, 5, 8},
             },
             "F": {
-                "U": {6, 7, 8}, "L": {2, 5, 8}, "F": set(),
-                "D": {0, 1, 2}, "R": {0, 3, 6}, "B": set(),
+                "U": {6, 7, 8},
+                "L": {2, 5, 8},
+                "F": set(),
+                "D": {0, 1, 2},
+                "R": {0, 3, 6},
+                "B": set(),
             },
             "B": {
-                "U": {0, 1, 2}, "L": {0, 3, 6}, "F": set(),
-                "D": {6, 7, 8}, "R": {2, 5, 8}, "B": set(),
+                "U": {0, 1, 2},
+                "L": {0, 3, 6},
+                "F": set(),
+                "D": {6, 7, 8},
+                "R": {2, 5, 8},
+                "B": set(),
             },
             "R": {
-                "U": {2, 5, 8}, "L": set(), "F": {2, 5, 8},
-                "D": {2, 5, 8}, "R": set(), "B": {0, 3, 6},
+                "U": {2, 5, 8},
+                "L": set(),
+                "F": {2, 5, 8},
+                "D": {2, 5, 8},
+                "R": set(),
+                "B": {0, 3, 6},
             },
             "D": {face: ({6, 7, 8} if face in "LFRB" else set()) for face in "ULFDRB"},
         }
@@ -143,17 +161,25 @@ class CliTests(unittest.TestCase):
         geometry = json.loads(geometry_match.group(1))
         coordinate_index = {"x": 0, "y": 1, "z": 2}
         normals = {
-            "U": (0, -1, 0), "D": (0, 1, 0),
-            "L": (-1, 0, 0), "R": (1, 0, 0),
-            "F": (0, 0, 1), "B": (0, 0, -1),
+            "U": (0, -1, 0),
+            "D": (0, 1, 0),
+            "L": (-1, 0, 0),
+            "R": (1, 0, 0),
+            "F": (0, 0, 1),
+            "B": (0, 0, -1),
         }
 
         def coordinates(face: str, row: int, column: int) -> tuple[int, int, int]:
-            if face == "F": return column - 1, row - 1, 1
-            if face == "B": return 1 - column, row - 1, -1
-            if face == "R": return 1, row - 1, 1 - column
-            if face == "L": return -1, row - 1, column - 1
-            if face == "U": return column - 1, -1, row - 1
+            if face == "F":
+                return column - 1, row - 1, 1
+            if face == "B":
+                return 1 - column, row - 1, -1
+            if face == "R":
+                return 1, row - 1, 1 - column
+            if face == "L":
+                return -1, row - 1, column - 1
+            if face == "U":
+                return column - 1, -1, row - 1
             return column - 1, 1, 1 - row
 
         sticker_positions = {}
@@ -161,15 +187,19 @@ class CliTests(unittest.TestCase):
             for position, index in enumerate(stickers):
                 if index is not None:
                     sticker_positions[index] = (
-                        coordinates(face, position // 3, position % 3), normals[face]
+                        coordinates(face, position // 3, position % 3),
+                        normals[face],
                     )
 
         def rotate(vector, axis: str, quarter_turns: int):
             x, y, z = vector
             for _ in range(quarter_turns % 4):
-                if axis == "X": x, y, z = x, -z, y
-                elif axis == "Y": x, y, z = z, y, -x
-                else: x, y, z = -y, x, z
+                if axis == "X":
+                    x, y, z = x, -z, y
+                elif axis == "Y":
+                    x, y, z = z, y, -x
+                else:
+                    x, y, z = -y, x, z
             return x, y, z
 
         for move, permutation in permutations.items():
@@ -180,12 +210,17 @@ class CliTests(unittest.TestCase):
             for old_index, (old_coordinates, old_normal) in sticker_positions.items():
                 expected = sticker_positions[old_to_new[old_index]]
                 is_moving = (
-                    old_coordinates[coordinate_index[turn["coordinate"]]] == turn["layer"]
+                    old_coordinates[coordinate_index[turn["coordinate"]]]
+                    == turn["layer"]
                 )
                 animated = (
-                    rotate(old_coordinates, turn["axis"], quarter_turns),
-                    rotate(old_normal, turn["axis"], quarter_turns),
-                ) if is_moving else (old_coordinates, old_normal)
+                    (
+                        rotate(old_coordinates, turn["axis"], quarter_turns),
+                        rotate(old_normal, turn["axis"], quarter_turns),
+                    )
+                    if is_moving
+                    else (old_coordinates, old_normal)
+                )
                 self.assertEqual(animated, expected, (move, old_index))
 
     def test_solve_command_accepts_a_scramble(self) -> None:

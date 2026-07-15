@@ -2,8 +2,8 @@
 #include <string>
 #include <vector>
 
-#include "Rubikoslav/Move.hpp"
 #include "Rubikoslav/Cuboslav.hpp"
+#include "Rubikoslav/Move.hpp"
 
 int main(int argc, char **argv) {
   Cuboslav cube;

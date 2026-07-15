@@ -13,7 +13,7 @@ class WebDocsTests(unittest.TestCase):
 
         self.assertIn('href="api.html"', index)
         self.assertIn("Python API", index)
-        self.assertIn("https://github.com/unnobatroo/rubikoslav", index)
+        self.assertIn("https://jalols.page", index)
         self.assertIn("By Jaloliddin Ismailov", index)
         self.assertIn("Rubikoslav().solve", guide)
         self.assertIn("/api/solve", guide)

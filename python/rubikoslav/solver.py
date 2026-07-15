@@ -16,10 +16,6 @@ from .CuboslavWrapper import CuboslavWrapper
 
 SOLVED_STATE = (0,) * 8 + (1,) * 8 + (2,) * 8 + (5,) * 8 + (4,) * 8 + (3,) * 8
 
-# The native model stores the eight non-center stickers for each color face in
-# its historical layout. These indices translate that layout into the standard
-# URFDLB row-major facelet string used by cubie solvers. None is the fixed
-# center sticker, which is not present in the native 48-sticker representation.
 _FACELET_INDICES: dict[str, tuple[int | None, ...]] = {
     "U": (0, 1, 2, 3, None, 4, 5, 6, 7),
     "R": (37, 35, 32, 38, None, 33, 39, 36, 34),
@@ -75,13 +71,11 @@ def state_to_optimal_repr(state: Sequence[int]) -> str:
 
     facelets = state_to_facelets(state)
     blocks = {
-        face: facelets[index * 9:(index + 1) * 9]
+        face: facelets[index * 9 : (index + 1) * 9]
         for index, face in enumerate("URFDLB")
     }
     return "".join(
-        _OPTIMAL_COLOR[sticker]
-        for face in "ULFRBD"
-        for sticker in blocks[face]
+        _OPTIMAL_COLOR[sticker] for face in "ULFRBD" for sticker in blocks[face]
     )
 
 
@@ -130,8 +124,7 @@ def verified_history_route(state: Sequence[int], history: Sequence[str]) -> list
         raise ValueError("Route history does not produce the submitted cube state")
 
     inverse = [
-        move[0] + {"": "'", "2": "2", "'": ""}[move[1:]]
-        for move in reversed(history)
+        move[0] + {"": "'", "2": "2", "'": ""}[move[1:]] for move in reversed(history)
     ]
     route = simplify_moves(inverse)
     verify_route(values, route)
@@ -160,12 +153,12 @@ class Rubikoslav:
             elif os.environ.get("VERCEL"):
                 cache_directory = Path("/tmp/rubikoslav-optimal")
             else:
-                cache_home = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+                cache_home = Path(
+                    os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")
+                )
                 cache_directory = cache_home / "rubikoslav" / "optimal"
             cache_directory.mkdir(parents=True, exist_ok=True)
 
-            # cube-solver stores its generated tables below ./tables. Keep that
-            # implementation detail out of the repository and inside our cache.
             previous_directory = Path.cwd()
             try:
                 os.chdir(cache_directory)
@@ -221,7 +214,9 @@ class Rubikoslav:
                     result.search_depth = len(result.moves)
                     return result
                 if max_depth is None:
-                    raise RuntimeError("Optimal search timed out before finding a route")
+                    raise RuntimeError(
+                        "Optimal search timed out before finding a route"
+                    )
                 raise RuntimeError(f"No solution was found within {max_depth} moves")
 
             result.moves = str(solution).split() if solution else []
@@ -229,7 +224,7 @@ class Rubikoslav:
             result.success = True
             result.optimal = True
             result.search_depth = len(result.moves)
-        except Exception as error:  # Public API reports failures as structured data.
+        except Exception as error:
             result.error = str(error)
         finally:
             result.elapsed_microseconds = (perf_counter_ns() - started) // 1_000

@@ -3,8 +3,8 @@
 #include <array>
 #include <iostream>
 
-#include "Rubikoslav/Move.hpp"
 #include "Rubikoslav/Cuboslav.hpp"
+#include "Rubikoslav/Move.hpp"
 
 Move::Move(char m) : move(m) {
   constexpr char moves[18] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',

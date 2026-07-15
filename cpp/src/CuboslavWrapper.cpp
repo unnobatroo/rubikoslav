@@ -27,9 +27,7 @@ void CuboslavWrapper::setCube(const std::vector<int> &state) {
   cube.setState(state);
 }
 
-std::array<short, 48> CuboslavWrapper::getCube() const {
-  return cube.cube;
-}
+std::array<short, 48> CuboslavWrapper::getCube() const { return cube.cube; }
 
 PYBIND11_MODULE(CuboslavWrapper, m) {
   pybind11::class_<CuboslavWrapper>(m, "CuboslavWrapper")
