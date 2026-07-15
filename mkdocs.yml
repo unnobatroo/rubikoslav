@@ -30,7 +30,6 @@ theme:
 nav:
   - Overview: index.md
   - Getting started: getting-started.md
-  - Visualizer: visualizer.md
   - Python API: python-api.md
   - C++ API: cpp-api.md
   - Architecture: architecture.md
@@ -56,4 +55,4 @@ markdown_extensions:
 extra_css:
   - stylesheets/extra.css
 
-copyright: Created by [Jaloliddin Ismailov](https://jalols.page/)
+copyright: 'Created by <a href="https://jalols.page/" rel="noopener">Jaloliddin Ismailov</a>'
