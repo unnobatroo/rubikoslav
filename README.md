@@ -153,7 +153,3 @@ uv sync --locked
 uv run rubikoslav doctor --strict
 uv run python -m unittest discover -s python/tests -v
 ```
-
-## License
-
-Rubikoslav is licensed under the GNU General Public License version 3.0. See [LICENSE](LICENSE).
