@@ -87,7 +87,7 @@ def run_doctor(strict: bool = False) -> int:
 
 def serve_visualizer(host: str, port: int, open_browser: bool) -> int:
     directory = web_directory()
-    solver = Rubikoslav()
+    solver = Rubikoslav(optimal_timeout_seconds=2)
 
     class VisualizerHandler(QuietStaticHandler):
         def __init__(self, *args: object, **kwargs: object) -> None:
@@ -103,7 +103,7 @@ def serve_visualizer(host: str, port: int, open_browser: bool) -> int:
 
         def do_GET(self) -> None:  # noqa: N802 - inherited HTTP handler API
             if self.path == "/api/solve":
-                self.send_json(200, {"success": True, "backend": "optimal-ida-star"})
+                self.send_json(200, {"success": True, "backend": "adaptive-solver"})
                 return
             super().do_GET()
 

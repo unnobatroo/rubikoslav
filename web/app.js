@@ -463,12 +463,12 @@ async function solveCurrentPosition(autoplay = false) {
   setSolvingControls(true);
   renderTimeline();
   renderCube();
-  showMessage('Preparing the optimal solver. The first solve may take a few seconds.');
+  showMessage('Searching for the shortest route. Deep positions switch to a fast verified route automatically.');
   try {
     const response = await fetch('/api/solve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ state: capturedState }),
+      body: JSON.stringify({ state: capturedState, history: positionMoves }),
     });
     const payload = await response.json();
     if (!response.ok || !payload.success) throw new Error(payload.error || 'The solver request failed.');
@@ -479,7 +479,8 @@ async function solveCurrentPosition(autoplay = false) {
     routeIndex = 0;
     renderTimeline();
     const milliseconds = Math.round(payload.elapsedMicroseconds / 1000);
-    showMessage(`Solved and native-verified in ${milliseconds} ms with ${route.length} moves.`, true);
+    const resultKind = payload.optimal ? 'Shortest route proven' : 'Fast route';
+    showMessage(`${resultKind} and native-verified in ${milliseconds} ms with ${route.length} moves.`, true);
     solved = true;
   } catch (error) {
     showMessage(`${error.message} Start the visualizer with “uv run rubikoslav” to enable solving.`);

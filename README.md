@@ -1,8 +1,8 @@
 # Rubikoslav
 
-Rubikoslav is a 3×3 Rubik's Cube solver with a native C++ cube model, an optimal Python search engine, and an interactive browser view.
+Rubikoslav is a 3×3 Rubik's Cube solver with a native C++ cube model, an adaptive Python search engine, and an interactive browser view.
 
-Turn faces in the browser, press **Solve & play**, and Rubikoslav finds the shortest route back to solved. Every answer is replayed through the C++ model before the browser is allowed to show it.
+Turn faces in the browser, press **Solve & play**, and Rubikoslav finds a route back to solved. It tries to prove the shortest route first and switches to a fast route for deep positions. Every answer is replayed through the C++ model before the browser is allowed to show it.
 
 ## Contents
 
@@ -61,13 +61,15 @@ The native model stores 48 movable stickers because the six centers never move. 
 
 This is a format conversion, like writing one address in two postal systems. It does not change the cube.
 
-### 4. One optimal search finds the route
+### 4. Search finds the route
 
-Rubikoslav uses Korf-style IDA* search. It begins with the lowest possible solution length and increases that bound only when the current length cannot work. Pruning tables provide safe lower bounds: they can say a position needs *at least* a certain number of turns, but never exaggerate it.
+Rubikoslav starts with Korf-style IDA* search. It begins with the lowest possible solution length and increases that bound only when the current length cannot work. Pruning tables provide safe lower bounds: they can say a position needs *at least* a certain number of turns, but never exaggerate it.
 
-Because shorter depths are exhausted first and the estimates do not overstate the remaining distance, the first answer found is a mathematically shortest answer in half-turn metric. `R2` therefore counts as one move, just like `R` or `R'`.
+When that search finishes inside the web server's time budget, its answer is mathematically shortest in half-turn metric. `R2` therefore counts as one move, just like `R` or `R'`.
 
-There are no saved scrambles, special cases for nearby positions, or a second fallback solver. The same search handles every legal state. That honesty has a cost: proving an optimal answer for a difficult position can take much longer than finding a merely decent answer.
+Deep random positions can take minutes to prove. The web app does not leave the controls frozen while that proof runs. After two seconds it reverses and simplifies the actual button history, checks that the history produced the submitted state, and replays the return route through C++. The result is fast and verified, but is labelled as fast rather than shortest-proven.
+
+There are no saved scrambles or position-specific answers. The fallback is calculated from the moves that made the current cube.
 
 The transition and pruning tables are generated locally on first use and cached under `~/.cache/rubikoslav/optimal/tables`. No legacy lookup files or manual downloads are required.
 
@@ -87,9 +89,11 @@ flowchart LR
     App --> Native[C++ Cuboslav]
     Native --> Validation[Physical-state checks]
     Validation --> Adapter[48 stickers to color net]
-    Adapter --> Search[Optimal IDA* search]
+    Adapter --> Search[Time-bounded optimal search]
     Tables[(Generated pruning tables)] --> Search
-    Search --> Replay[Native route replay]
+    Search -->|Shortest route proven| Replay[Native route replay]
+    Search -->|Deep position| History[Reverse and simplify verified history]
+    History --> Replay
     Replay --> User
 
     Native -. build time .-> Generator[WebDataGeneratorovich]
@@ -103,7 +107,7 @@ The normal solve path runs from the browser or terminal through validation, tran
 | `Cuboslav` | Stores, turns, and validates the cube. | The physical cube on the table. |
 | `Move` | Reads notation such as `R`, `U2`, and `F'`. | The shared vocabulary. |
 | `CuboslavWrapper` | Connects Python to C++. | An interpreter between two colleagues. |
-| `Rubikoslav` | Runs optimal search and verifies the result. | The person planning and checking the route. |
+| `Rubikoslav` | Tries optimal search, handles deep-position fallback, and verifies the result. | The person planning and checking the route. |
 | `WebDataGeneratorovich` | Derives browser turns from C++. | The movement instruction writer. |
 | `web/` | Builds positions and animates solutions. | The demonstration table. |
 

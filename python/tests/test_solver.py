@@ -9,9 +9,11 @@ from rubikoslav import (
     CuboslavWrapper,
     SOLVED_STATE,
     solve_payload,
+    simplify_moves,
     state_to_facelets,
     state_to_optimal_repr,
     verify_route,
+    verified_history_route,
 )
 
 
@@ -77,6 +79,42 @@ class SolverTests(unittest.TestCase):
             verify_route(state, result.moves)
         self.assertEqual(result.backend, "optimal-ida-star")
 
+    def test_deep_web_positions_fall_back_to_verified_history(self) -> None:
+        faces = "ULFBRD"
+        suffixes = ("", "2", "'")
+        history = [
+            faces[index % len(faces)] + suffixes[(index * 2) % len(suffixes)]
+            for index in range(26)
+        ]
+        cube = CuboslavWrapper()
+        for move in history:
+            cube.move(move)
+
+        status, payload = solve_payload(
+            {"state": cube.getCube(), "history": history},
+            Rubikoslav(optimal_timeout_seconds=0),
+        )
+
+        self.assertEqual(status, 200)
+        self.assertTrue(payload["success"])
+        self.assertFalse(payload["optimal"])
+        self.assertEqual(payload["backend"], "verified-history-route")
+        self.assertLessEqual(len(payload["moves"]), len(history))
+        verify_route(cube.getCube(), payload["moves"])
+
+    def test_history_simplification_is_state_preserving(self) -> None:
+        history = ["R", "L", "R'", "U", "U2", "U'"]
+        cube = CuboslavWrapper()
+        for move in history:
+            cube.move(move)
+
+        simplified = simplify_moves(history)
+        rebuilt = CuboslavWrapper()
+        for move in simplified:
+            rebuilt.move(move)
+        self.assertEqual(rebuilt.getCube(), cube.getCube())
+        verify_route(cube.getCube(), verified_history_route(cube.getCube(), history))
+
     def test_compact_codes_replay(self) -> None:
         cube = CuboslavWrapper()
         for move in ("F", "R", "U", "R'", "U'", "F'"):
@@ -101,6 +139,7 @@ class SolverTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertTrue(payload["success"])
         self.assertEqual(payload["backend"], "optimal-ida-star")
+        self.assertTrue(payload["optimal"])
 
     def test_web_payload_rejects_excessive_optional_depth(self) -> None:
         with self.assertRaisesRegex(ValueError, "between 0 and 30"):

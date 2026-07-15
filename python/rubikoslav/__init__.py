@@ -8,7 +8,9 @@ from .solver import (
     solve_payload,
     state_to_facelets,
     state_to_optimal_repr,
+    simplify_moves,
     verify_route,
+    verified_history_route,
 )
 
 __all__ = [
@@ -19,6 +21,8 @@ __all__ = [
     "solve_payload",
     "state_to_facelets",
     "state_to_optimal_repr",
+    "simplify_moves",
     "verify_route",
+    "verified_history_route",
 ]
 __version__ = "0.4.0"

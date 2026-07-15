@@ -17,7 +17,7 @@ if os.environ.get("VERCEL"):
 
 from rubikoslav import Rubikoslav, solve_payload
 
-_SOLVER = Rubikoslav()
+_SOLVER = Rubikoslav(optimal_timeout_seconds=2)
 _WEB_DIRECTORY = Path(__file__).resolve().parents[1] / "web"
 _STATIC_FILES = {
     "/": _WEB_DIRECTORY / "index.html",
@@ -47,7 +47,7 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802 - Vercel handler API
         path = urlsplit(self.path).path
         if path == "/api/solve":
-            self.send_json(200, {"success": True, "backend": "optimal-ida-star"})
+            self.send_json(200, {"success": True, "backend": "adaptive-solver"})
             return
         asset = _STATIC_FILES.get(path)
         if asset is None or not asset.is_file():

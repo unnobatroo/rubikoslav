@@ -76,6 +76,8 @@ class CliTests(unittest.TestCase):
         self.assertIn('translateY(var(--cube-lift)) rotateX', script)
         self.assertIn("let positionMoves = []", script)
         self.assertIn("positionMoves.push(move)", script)
+        self.assertIn("history: positionMoves", script)
+        self.assertIn("payload.optimal ? 'Shortest route proven' : 'Fast route'", script)
         self.assertIn("showMessage('Position and move history reset.'", script)
         self.assertIn("routeKind = 'solution'", script)
         self.assertIn("movePermutations[standard] ? standard", script)

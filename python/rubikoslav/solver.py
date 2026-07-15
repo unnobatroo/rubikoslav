@@ -35,6 +35,9 @@ _NOTATION_TO_CODE = {
     for turn_index, suffix in enumerate(("", "2", "'"))
 }
 _OPTIMAL_COLOR = {"U": "W", "L": "O", "F": "G", "R": "R", "B": "B", "D": "Y"}
+_OPPOSITE_FACE = {"U": "D", "D": "U", "L": "R", "R": "L", "F": "B", "B": "F"}
+_SUFFIX_TO_TURNS = {"": 1, "2": 2, "'": 3}
+_TURNS_TO_SUFFIX = {1: "", 2: "2", 3: "'"}
 _INITIALIZE_LOCK = Lock()
 _SOLVE_LOCK = Lock()
 _OPTIMAL_SOLVER: Korf | None = None
@@ -50,6 +53,7 @@ class SolveResult:
     search_depth: int = 0
     elapsed_microseconds: int = 0
     backend: str = "optimal-ida-star"
+    optimal: bool = False
 
 
 def state_to_facelets(state: Sequence[int]) -> str:
@@ -92,8 +96,53 @@ def verify_route(state: Sequence[int], moves: Sequence[str]) -> None:
         raise RuntimeError("The solver returned a route that failed native replay")
 
 
+def simplify_moves(moves: Sequence[str]) -> list[str]:
+    """Combine same-face turns, commuting across only the opposite face."""
+
+    simplified: list[tuple[str, int]] = []
+    for move in moves:
+        if move not in _NOTATION_TO_CODE:
+            raise ValueError(f"Invalid move in route history: {move}")
+        face, turns = move[0], _SUFFIX_TO_TURNS[move[1:]]
+        index = len(simplified)
+        while index > 0 and simplified[index - 1][0] == _OPPOSITE_FACE[face]:
+            index -= 1
+        if index > 0 and simplified[index - 1][0] == face:
+            combined = (simplified[index - 1][1] + turns) % 4
+            simplified.pop(index - 1)
+            if combined:
+                simplified.insert(index - 1, (face, combined))
+        else:
+            simplified.insert(index, (face, turns))
+    return [face + _TURNS_TO_SUFFIX[turns] for face, turns in simplified]
+
+
+def verified_history_route(state: Sequence[int], history: Sequence[str]) -> list[str]:
+    """Build and verify a return route from the moves that made the position."""
+
+    if len(history) > 200:
+        raise ValueError("Route history cannot contain more than 200 moves")
+    history_cube = CuboslavWrapper()
+    for move in history:
+        history_cube.move(move)
+    values = tuple(int(value) for value in state)
+    if tuple(history_cube.getCube()) != values:
+        raise ValueError("Route history does not produce the submitted cube state")
+
+    inverse = [
+        move[0] + {"": "'", "2": "2", "'": ""}[move[1:]]
+        for move in reversed(history)
+    ]
+    route = simplify_moves(inverse)
+    verify_route(values, route)
+    return route
+
+
 class Rubikoslav:
-    """Public solver backed by one optimal IDA* search."""
+    """Public solver with optimal search and a verified history fallback."""
+
+    def __init__(self, optimal_timeout_seconds: int | None = None) -> None:
+        self.optimal_timeout_seconds = optimal_timeout_seconds
 
     @staticmethod
     def initialize(verbose: bool = False) -> None:
@@ -128,6 +177,7 @@ class Rubikoslav:
         self,
         state: Sequence[int],
         max_depth: int | None = None,
+        history: Sequence[str] | None = None,
     ) -> SolveResult:
         """Solve a validated native cube state and verify the returned route."""
 
@@ -139,8 +189,10 @@ class Rubikoslav:
 
             values = [int(value) for value in state]
             optimal_repr = state_to_optimal_repr(values)
+            history_route = verified_history_route(values, history) if history else None
             if tuple(values) == SOLVED_STATE:
                 result.success = True
+                result.optimal = True
                 return result
 
             self.initialize()
@@ -154,15 +206,28 @@ class Rubikoslav:
                 solver = _OPTIMAL_SOLVER
                 if solver is None:  # Defensive: initialize() must set it.
                     raise RuntimeError("Optimal solver did not initialize")
-                solution = solver.solve(cube, max_length=max_depth)
+                solution = solver.solve(
+                    cube,
+                    max_length=max_depth,
+                    timeout=self.optimal_timeout_seconds,
+                )
             if solution is None:
+                if history_route is not None and (
+                    max_depth is None or len(history_route) <= max_depth
+                ):
+                    result.moves = history_route
+                    result.backend = "verified-history-route"
+                    result.success = True
+                    result.search_depth = len(result.moves)
+                    return result
                 if max_depth is None:
-                    raise RuntimeError("No solution was found")
+                    raise RuntimeError("Optimal search timed out before finding a route")
                 raise RuntimeError(f"No solution was found within {max_depth} moves")
 
             result.moves = str(solution).split() if solution else []
             verify_route(values, result.moves)
             result.success = True
+            result.optimal = True
             result.search_depth = len(result.moves)
         except Exception as error:  # Public API reports failures as structured data.
             result.error = str(error)
@@ -192,7 +257,18 @@ def solve_payload(
     if max_depth is not None and not 0 <= max_depth <= 30:
         raise ValueError("maxDepth must be between 0 and 30 when provided")
 
-    result = (solver or Rubikoslav()).solve(state, max_depth=max_depth)
+    history = payload.get("history")
+    if history is not None and (
+        not isinstance(history, list)
+        or not all(isinstance(move, str) for move in history)
+    ):
+        raise ValueError("history must be an array of move strings when provided")
+
+    result = (solver or Rubikoslav()).solve(
+        state,
+        max_depth=max_depth,
+        history=history,
+    )
     return (
         200 if result.success else 422,
         {
@@ -201,5 +277,6 @@ def solve_payload(
             "error": result.error,
             "elapsedMicroseconds": result.elapsed_microseconds,
             "backend": result.backend,
+            "optimal": result.optimal,
         },
     )
