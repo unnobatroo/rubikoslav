@@ -1,10 +1,10 @@
 # Rubikoslav
 
-[![Python package](https://img.shields.io/badge/Python-package-3776AB?style=flat-square&logo=python&logoColor=white)](#install-the-package)
-[![Live visualizer](https://img.shields.io/badge/visualizer-live-C5FF2E?style=flat-square&logo=vercel&logoColor=111519)](https://rubikoslav.vercel.app)
-[![Wiki](https://img.shields.io/badge/docs-wiki-2878EB?style=flat-square&logo=materialformkdocs&logoColor=white)](https://unnobatroo.github.io/rubikoslav/)
+[![Python package](https://img.shields.io/badge/Python-package-3776AB?logo=python&logoColor=white)](#install-the-package)
+[![Live visualizer](https://img.shields.io/badge/visualizer-live-C5FF2E?logo=vercel&logoColor=111519)](https://rubikoslav.vercel.app)
+[![Wiki](https://img.shields.io/badge/docs-wiki-2878EB?logo=materialformkdocs&logoColor=white)](https://unnobatroo.github.io/rubikoslav/)
 [![CI](https://github.com/unnobatroo/rubikoslav/actions/workflows/ci.yml/badge.svg)](https://github.com/unnobatroo/rubikoslav/actions/workflows/ci.yml)
-[![GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-E5483F?style=flat-square)](LICENSE)
+[![GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-E5483F)](LICENSE)
 
 Rubikoslav is a reusable 3×3 Rubik's Cube solver. It combines a C++20 cube engine, a Python API and CLI, and an animated browser visualizer. Every returned solution is replayed through the native cube before it is accepted.
 
