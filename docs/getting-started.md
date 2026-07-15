@@ -1,25 +1,31 @@
 # Getting started
 
-## Install the library
+## Install the package
 
 Use a virtual environment in real projects:
 
-=== "pip"
+=== "Current GitHub package"
 
     ```bash
     python -m venv .venv
     source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
-    pip install rubikoslav
+    pip install "rubikoslav @ git+https://github.com/unnobatroo/rubikoslav.git"
     ```
 
-=== "uv"
+=== "Current GitHub package with uv"
 
     ```bash
     uv init
-    uv add rubikoslav
+    uv add "rubikoslav @ git+https://github.com/unnobatroo/rubikoslav.git"
     ```
 
-The published wheels include the compiled native extension. A normal install should not require CMake or a C++ compiler.
+=== "PyPI release"
+
+    ```bash
+    pip install rubikoslav
+    ```
+
+The PyPI command becomes available after the first tagged release. Until then, install the same package directly from GitHub. A source install needs the platform's normal compiler tools; published wheels will include the compiled native extension.
 
 ## Open the visualizer
 
@@ -38,6 +44,25 @@ rubikoslav --no-open
 ```bash
 rubikoslav solve "R U R' U'"
 ```
+
+## Common commands
+
+| Command | What it does |
+| --- | --- |
+| `rubikoslav` | Opens the local visualizer. |
+| `rubikoslav --no-open` | Starts the app without opening a browser. |
+| `rubikoslav --port 8080` | Uses another local port. |
+| `rubikoslav solve "R U F2"` | Solves a scramble from the terminal. |
+| `rubikoslav doctor` | Checks the native module, solver, and web files. |
+| `rubikoslav doctor --strict` | Performs and replays a real solve. |
+
+## Move notation
+
+Rubikoslav uses standard face letters: `U`, `D`, `L`, `R`, `F`, and `B`.
+
+- `R` means one quarter turn.
+- `R2` means a half turn.
+- `R'` means the reverse quarter turn.
 
 ## Check the installation
 

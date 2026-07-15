@@ -30,6 +30,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://rubikoslav.vercel.app"
+Documentation = "https://unnobatroo.github.io/rubikoslav/"
 Repository = "https://github.com/unnobatroo/rubikoslav"
 Issues = "https://github.com/unnobatroo/rubikoslav/issues"
 

@@ -55,8 +55,11 @@ input {
 }
 
 .md-header__button.md-logo img,
-.md-header__button.md-logo svg {
-  border-radius: 3px;
+.md-header__button.md-logo svg,
+.md-nav__button.md-logo img,
+.md-nav__button.md-logo svg {
+  border-radius: 0 !important;
+  clip-path: none;
 }
 
 [data-md-color-scheme="slate"] .md-main {

@@ -49,3 +49,17 @@ Open <http://127.0.0.1:8000>. A strict production build uses:
 ```bash
 uv run --no-sync mkdocs build --strict
 ```
+
+## Production deployment
+
+Pushes to `main` run the test suite and deploy the application through `.github/workflows/deploy.yml`. The repository needs the `VERCEL_TOKEN` Actions secret.
+
+For a manual deployment:
+
+```bash
+vercel --prod
+```
+
+Vercel stores generated search tables under `/tmp` for each warm function instance. A cold instance initializes them again.
+
+Documentation changes run `.github/workflows/docs.yml` and publish `docs/` to GitHub Pages.
