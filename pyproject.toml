@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "rubikoslav"
-version = "0.4.0"
+version = "0.4.1"
 description = "C++ Rubik's Cube engine, adaptive solver, Python API, and interactive visualizer"
 authors = [{name = "Jaloliddin Ismailov"}]
 readme = "README.md"
@@ -18,7 +18,6 @@ classifiers = [
   "Environment :: Console",
   "Intended Audience :: Developers",
   "Programming Language :: C++",
-  "Programming Language :: C++ :: 20",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",

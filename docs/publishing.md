@@ -27,7 +27,7 @@ Keep the version identical in:
 Then run:
 
 ```bash
-uv run python scripts/check_release.py v0.4.0
+uv run python scripts/check_release.py v0.4.1
 uv run python -m unittest discover -s python/tests -v
 uv build
 ```
@@ -37,8 +37,8 @@ uv build
 Create and push a tag matching the version:
 
 ```bash
-git tag v0.4.0
-git push origin v0.4.0
+git tag v0.4.1
+git push origin v0.4.1
 ```
 
 `.github/workflows/release.yml` then:

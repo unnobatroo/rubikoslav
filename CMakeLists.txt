@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.26)
 
-project(Rubikoslav VERSION 0.4.0 LANGUAGES CXX)
+project(Rubikoslav VERSION 0.4.1 LANGUAGES CXX)
 
 include(CTest)
 include(GNUInstallDirs)

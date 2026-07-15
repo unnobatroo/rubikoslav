@@ -4,28 +4,22 @@
 
 Use a virtual environment in real projects:
 
-=== "Current GitHub package"
+=== "pip"
 
     ```bash
     python -m venv .venv
     source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
-    pip install "rubikoslav @ git+https://github.com/unnobatroo/rubikoslav.git"
-    ```
-
-=== "Current GitHub package with uv"
-
-    ```bash
-    uv init
-    uv add "rubikoslav @ git+https://github.com/unnobatroo/rubikoslav.git"
-    ```
-
-=== "PyPI release"
-
-    ```bash
     pip install rubikoslav
     ```
 
-The PyPI command becomes available after the first tagged release. Until then, install the same package directly from GitHub. A source install needs the platform's normal compiler tools; published wheels will include the compiled native extension.
+=== "uv"
+
+    ```bash
+    uv init
+    uv add rubikoslav
+    ```
+
+Published wheels include the compiled native extension, so normal installs on supported platforms do not need CMake or a C++ compiler.
 
 ## Open the visualizer
 

@@ -16,13 +16,7 @@ Every returned route is replayed through the native engine before it is accepted
 
 ## Install
 
-Install the current package directly from GitHub:
-
-```bash
-pip install "rubikoslav @ git+https://github.com/unnobatroo/rubikoslav.git"
-```
-
-After the first tagged PyPI release, the shorter command is:
+Install the published package from PyPI:
 
 ```bash
 pip install rubikoslav
