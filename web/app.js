@@ -389,7 +389,7 @@ function buildMovePad() {
 }
 
 function updateCamera() {
-  cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+  cube.style.transform = `translateY(var(--cube-lift)) rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
 }
 
 scene.addEventListener('pointerdown', (event) => {

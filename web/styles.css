@@ -248,12 +248,13 @@ select:focus-visible {
 
 .cube {
   --cubie-size: calc(var(--cube-size) / 3);
+  --cube-lift: -28px;
   width: var(--cube-size);
   height: var(--cube-size);
   position: relative;
   z-index: 2;
   transform-style: preserve-3d;
-  transform: rotateX(-14deg) rotateY(-36deg);
+  transform: translateY(var(--cube-lift)) rotateX(-14deg) rotateY(-36deg);
   transition: transform .12s ease-out;
 }
 
@@ -818,6 +819,10 @@ dialog form>label {
 
   .cube-scene {
     min-height: 420px;
+  }
+
+  .cube {
+    --cube-lift: -22px;
   }
 
   .move-pad {
