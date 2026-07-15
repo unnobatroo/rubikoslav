@@ -24,7 +24,7 @@ if result.success:
     print(result.moves)
 ```
 
-## Run the visualizer
+## Run the visualiser
 
 ```bash
 uv run rubikoslav
