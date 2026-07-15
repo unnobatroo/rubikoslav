@@ -36,15 +36,3 @@ else:
 ```
 
 The first solve generates or loads the optimal search tables in the local cache. Later runs reuse them.
-
-## Choose a route
-
-| I want to… | Read this |
-| --- | --- |
-| Install the app or use the CLI | [Getting started](getting-started.md) |
-| Use the animated cube | [Visualizer](visualizer.md) |
-| Call Rubikoslav from Python | [Python API](python-api.md) |
-| Link the native C++ library | [C++ API](cpp-api.md) |
-| Understand the solver and browser | [Architecture](architecture.md) |
-| Build or test the repository | [Development](development.md) |
-| Fix a setup or runtime problem | [Troubleshooting](troubleshooting.md) |
