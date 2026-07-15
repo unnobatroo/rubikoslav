@@ -365,8 +365,6 @@ select:focus-visible {
   justify-content: flex-start;
   gap: 9px;
   margin-top: 13px;
-  padding-top: 13px;
-  border-top: 1px solid var(--line);
 }
 
 .play {
@@ -424,6 +422,7 @@ select {
 
 .control-panel {
   position: relative;
+  display: flex;
   border-left: 1px solid var(--line-bright);
   background:
     linear-gradient(160deg, rgba(229, 72, 63, .025), transparent 34%),
@@ -432,13 +431,25 @@ select {
 
 .control-section {
   position: relative;
+  width: 100%;
+  min-height: 100%;
   padding: 34px 30px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.control-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
 }
 
 .resource-links {
   min-height: 28px;
-  margin-top: 18px;
   display: flex;
   align-items: center;
   gap: 18px;
@@ -453,6 +464,7 @@ select {
   font-weight: 700;
   letter-spacing: .04em;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .resource-links a:hover {
@@ -462,6 +474,21 @@ select {
 .resource-links .button-icon {
   width: 14px;
   height: 14px;
+}
+
+.creator-link {
+  justify-self: end;
+  color: #69717a;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.creator-link:hover {
+  color: var(--lime);
 }
 
 .docs-shell {
@@ -945,6 +972,15 @@ dialog form>label {
   .move-pad {
     grid-template-columns: repeat(3, 1fr);
   }
+
+  .control-footer {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .creator-link {
+    justify-self: end;
+  }
 }
 
 @media (max-width: 900px) {
@@ -996,6 +1032,12 @@ dialog form>label {
 
   .control-section {
     padding: 28px 20px;
+  }
+
+  .resource-links {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
   }
 
   .section-heading {

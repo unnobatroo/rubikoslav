@@ -52,6 +52,14 @@ class CliTests(unittest.TestCase):
         self.assertIn('id="load-solution"', html)
         self.assertGreater(html.index('id="timeline"'), html.index('id="move-pad"'))
         self.assertGreater(html.index('class="playback"'), html.index('id="timeline"'))
+        self.assertIn('class="control-footer"', html)
+        self.assertGreater(html.index('class="control-footer"'), html.index('class="playback"'))
+        self.assertIn('class="creator-link"', html)
+        self.assertIn("margin-top: auto", styles)
+        playback_styles = styles[
+            styles.index(".playback {") : styles.index(".play {")
+        ]
+        self.assertNotIn("border-top", playback_styles)
         self.assertIn('id="timeline-label"', html)
         self.assertIn('id="timeline-count"', html)
         self.assertGreater(
