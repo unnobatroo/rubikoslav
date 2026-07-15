@@ -248,7 +248,7 @@ select:focus-visible {
 
 .cube {
   --cubie-size: calc(var(--cube-size) / 3);
-  --cube-lift: -46px;
+  --cube-lift: -66px;
   width: var(--cube-size);
   height: var(--cube-size);
   position: relative;
