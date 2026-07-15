@@ -150,15 +150,12 @@ def serve_visualizer(host: str, port: int, open_browser: bool) -> int:
 def solve_scramble(scramble: str, max_depth: int | None, verbose: bool) -> int:
     """Solve a notation scramble from the command line."""
 
-    cube = CuboslavWrapper()
     try:
         moves = scramble.split()
-        for move in moves:
-            cube.move(move)
         solver = Rubikoslav()
         if moves:
             solver.initialize(verbose=verbose)
-        result = solver.solve(cube.getCube(), max_depth=max_depth)
+        result = solver.solve_scramble(moves, max_depth=max_depth)
     except Exception as error:
         print(f"Solve failed: {error}", file=sys.stderr)
         return 1

@@ -6,8 +6,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "Rubikoslav/Move.hpp"
 #include "Rubikoslav/Cuboslav.hpp"
+#include "Rubikoslav/Move.hpp"
 
 namespace {
 
@@ -31,10 +31,10 @@ std::string generatedModule() {
   output << "// Generated from the C++ Cuboslav engine. Do not edit by "
             "hand.\n";
   output << "export const solvedState = [";
-  for (std::size_t i = 0; i < RubikoslavConst::solvedCube.size(); ++i) {
+  for (std::size_t i = 0; i < rubikoslav::detail::solvedCube.size(); ++i) {
     if (i != 0)
       output << ',';
-    output << RubikoslavConst::solvedCube[i];
+    output << rubikoslav::detail::solvedCube[i];
   }
   output << "];\n\nexport const faceLayouts = [\n";
   for (std::size_t faceIndex = 0; faceIndex < faceLayouts.size(); ++faceIndex) {
@@ -54,12 +54,12 @@ std::string generatedModule() {
   }
   output << "];\n\nexport const movePermutations = {\n";
 
-  for (const char code : MoveConst::moves) {
-    Cuboslav cube;
+  for (const char code : rubikoslav::detail::moves) {
+    rubikoslav::Cuboslav cube;
     for (std::size_t i = 0; i < cube.cube.size(); ++i) {
       cube.cube[i] = static_cast<short>(i);
     }
-    const Move move(code);
+    const rubikoslav::Move move(code);
     cube.turn(move);
     output << "  \"" << move.notation() << "\": [";
     for (std::size_t i = 0; i < cube.cube.size(); ++i) {

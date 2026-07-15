@@ -2,9 +2,33 @@
 
 Rubikoslav is a 3×3 Rubik's Cube solver with a native C++ cube model, an adaptive Python search engine, and an interactive browser view.
 
+**[Open the visualizer](https://rubikoslav.vercel.app) · [Read the wiki](https://unnobatroo.github.io/rubikoslav/) · [View the source](https://github.com/unnobatroo/rubikoslav)**
+
 It tries to prove the shortest route first and switches to a fast route for deep positions. Every answer is replayed through the C++ model before the browser is allowed to show it.
 
 There are no saved scrambles or position-specific answers. The fallback is calculated from the moves that made the current cube.
+
+## Install it as a library
+
+Published releases install from PyPI:
+
+```bash
+pip install rubikoslav
+```
+
+The public API accepts normal cube notation, so another project does not need to manage the internal sticker array:
+
+```python
+from rubikoslav import Rubikoslav
+
+result = Rubikoslav().solve_scramble("R U F2")
+if result.success:
+    print(result.moves)
+else:
+    raise RuntimeError(result.error)
+```
+
+The first solve generates the optimal solver's local cache. Later runs reuse it.
 
 ## Run it
 
@@ -33,7 +57,7 @@ Imagine you want to study the position made by `R U F2`.
 
 "Load route" accepts normal notation such as `R U R' U'`. Compact `A`–`R` engine codes also work where they do not conflict with a face letter.
 
-The raw sticker array is handled automatically. You only need it when calling the Python API directly.
+The raw sticker array is handled automatically. Library users can call `solve_scramble()` with normal notation; `solve()` remains available for integrations that already track the 48 movable stickers.
 
 ## System design
 
@@ -95,6 +119,17 @@ Deleting the cache affects first run time. The tables are generated again when r
 
 Requirements are uv, a C++20 compiler, and the platform's normal development tools.
 
+The installed C++ API lives under the `rubikoslav` namespace:
+
+```cpp
+#include <Rubikoslav/Cuboslav.hpp>
+
+rubikoslav::Cuboslav cube;
+cube.turn(rubikoslav::Move::fromNotation("R"));
+```
+
+Lookup tables and generated move constants live under `rubikoslav::detail`; they are implementation support rather than the main public API. The CMake target remains `Rubikoslav::Core`.
+
 ```bash
 uv sync --locked
 uv run python -m unittest discover -s python/tests -v
@@ -124,6 +159,8 @@ Build the source archive and platform wheel with:
 ```bash
 uv build
 ```
+
+Release tags such as `v0.4.0` run `.github/workflows/release.yml`. The workflow checks that the tag, Python package, and CMake versions agree; builds wheels for Windows, macOS, and Linux; publishes through PyPI trusted publishing; and attaches the packages to a GitHub release.
 
 GitHub Actions repeats the Python tests, strict solve, package build, warning-clean native build, and CTest on Linux, macOS, and Windows.
 

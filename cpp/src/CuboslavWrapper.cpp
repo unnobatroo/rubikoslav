@@ -6,6 +6,8 @@
 
 #include "Rubikoslav/Cuboslav.hpp"
 
+namespace {
+
 class CuboslavWrapper {
 public:
   void move(const std::string &notation);
@@ -14,11 +16,11 @@ public:
   std::array<short, 48> getCube() const;
 
 private:
-  Cuboslav cube;
+  rubikoslav::Cuboslav cube;
 };
 
 void CuboslavWrapper::move(const std::string &notation) {
-  cube.turn(Move::fromNotation(notation));
+  cube.turn(rubikoslav::Move::fromNotation(notation));
 }
 
 void CuboslavWrapper::moveCode(const char code) { cube.turn(code); }
@@ -28,6 +30,8 @@ void CuboslavWrapper::setCube(const std::vector<int> &state) {
 }
 
 std::array<short, 48> CuboslavWrapper::getCube() const { return cube.cube; }
+
+} // namespace
 
 PYBIND11_MODULE(CuboslavWrapper, m) {
   pybind11::class_<CuboslavWrapper>(m, "CuboslavWrapper")

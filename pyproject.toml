@@ -20,14 +20,25 @@ classifiers = [
   "Programming Language :: C++",
   "Programming Language :: C++ :: 20",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Games/Entertainment :: Puzzle Games",
 ]
+
+[project.urls]
+Homepage = "https://rubikoslav.vercel.app"
+Repository = "https://github.com/unnobatroo/rubikoslav"
+Issues = "https://github.com/unnobatroo/rubikoslav/issues"
 
 [project.scripts]
 rubikoslav = "rubikoslav.cli:main"
 
 [dependency-groups]
 dev = []
+docs = ["mkdocs==1.6.1", "mkdocs-material==9.7.6"]
 
 [tool.scikit-build]
 wheel.packages = ["python/rubikoslav"]
@@ -40,6 +51,7 @@ sdist.include = [
   "/cpp/",
   "/python/rubikoslav/*.py",
   "/python/tests/*.py",
+  "/scripts/check_release.py",
   "/api/*.py",
   "/web/",
   "/vercel.json",
@@ -62,6 +74,11 @@ RUBIKOSLAV_BUILD_PYTHON = "ON"
 RUBIKOSLAV_BUILD_EXAMPLES = "OFF"
 RUBIKOSLAV_BUILD_WEB = "OFF"
 BUILD_TESTING = "OFF"
+
+[tool.cibuildwheel]
+build = ["cp310-*", "cp311-*", "cp312-*", "cp313-*", "cp314-*"]
+skip = ["*-musllinux_*", "*_i686", "*_ppc64le", "*_s390x"]
+test-command = "python -c \"from rubikoslav import CuboslavWrapper; cube = CuboslavWrapper(); initial = cube.getCube(); cube.move('R'); cube.move(\\\"R'\\\"); assert cube.getCube() == initial\""
 
 [tool.vercel]
 entrypoint = "api.solve:handler"

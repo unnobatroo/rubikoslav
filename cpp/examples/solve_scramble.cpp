@@ -6,7 +6,7 @@
 #include "Rubikoslav/Move.hpp"
 
 int main(int argc, char **argv) {
-  Cuboslav cube;
+  rubikoslav::Cuboslav cube;
   std::vector<std::string> notation;
 
   for (int i = 1; i < argc; ++i) {
@@ -15,10 +15,11 @@ int main(int argc, char **argv) {
 
   if (notation.empty()) {
     const auto scramble = cube.shuffle(20, false, 20260714);
-    notation = Move::convertVectorMoveToNotation(scramble);
+    notation = rubikoslav::Move::convertVectorMoveToNotation(scramble);
     std::cout << "Deterministic scramble:";
   } else {
-    for (const auto &move : Move::convertVectorNotationToMove(notation)) {
+    for (const auto &move :
+         rubikoslav::Move::convertVectorNotationToMove(notation)) {
       cube.turn(move);
     }
     std::cout << "Applied moves:";

@@ -9,6 +9,8 @@
 
 #include "Rubikoslav/Move.hpp"
 
+namespace rubikoslav {
+
 enum Hash {
   TwoCorners,
   ThreeCorners,
@@ -23,16 +25,16 @@ struct CubeValidationResult {
   std::string message;
 };
 
-namespace RubikoslavConst {
-std::array<Move, 18> extern everyMove;
+namespace detail {
+extern std::array<Move, 18> everyMove;
 
-constexpr std::array<int, 3> oppositeFace = {5, 4, 3};
-constexpr std::array<int, 6> oppositeFaceAll = {5, 4, 3, 2, 1, 0};
-const std::array<short, 48> solvedCube = {
+inline constexpr std::array<int, 3> oppositeFace = {5, 4, 3};
+inline constexpr std::array<int, 6> oppositeFaceAll = {5, 4, 3, 2, 1, 0};
+inline constexpr std::array<short, 48> solvedCube = {
     0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2,
     5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3};
 
-const std::array<std::vector<int>, 48> physicalPieces = {{
+inline const std::array<std::vector<int>, 48> physicalPieces = {{
     {10, 45}, // 0
     {46},     // 1
     {47, 32}, // 2
@@ -83,51 +85,51 @@ const std::array<std::vector<int>, 48> physicalPieces = {{
     {32, 2}   // 47
 }};
 
-const std::array<std::vector<int>, 48> colors = {{// Begin Corners
-                                                  {5, 4, 3},
-                                                  {5, 3, 1},
-                                                  {5, 2, 4},
-                                                  {5, 1, 2},
-                                                  {0, 4, 2},
-                                                  {0, 2, 1},
-                                                  {0, 3, 4},
-                                                  {0, 1, 3},
-                                                  // End Corners
-                                                  // Start Edges
-                                                  {5, 3},
-                                                  {5, 4},
-                                                  {5, 1},
-                                                  {5, 2},
+inline const std::array<std::vector<int>, 48> colors = {{// Begin Corners
+                                                         {5, 4, 3},
+                                                         {5, 3, 1},
+                                                         {5, 2, 4},
+                                                         {5, 1, 2},
+                                                         {0, 4, 2},
+                                                         {0, 2, 1},
+                                                         {0, 3, 4},
+                                                         {0, 1, 3},
+                                                         // End Corners
+                                                         // Start Edges
+                                                         {5, 3},
+                                                         {5, 4},
+                                                         {5, 1},
+                                                         {5, 2},
 
-                                                  {4, 3},
-                                                  {2, 4},
-                                                  {1, 2},
-                                                  {1, 3},
+                                                         {4, 3},
+                                                         {2, 4},
+                                                         {1, 2},
+                                                         {1, 3},
 
-                                                  {0, 2},
-                                                  {0, 4},
-                                                  {0, 1},
-                                                  {0, 3}}};
+                                                         {0, 2},
+                                                         {0, 4},
+                                                         {0, 1},
+                                                         {0, 3}}};
 
-const std::array<int, 30> colorComboLookupEdgesArray = {
+inline constexpr std::array<int, 30> colorComboLookupEdgesArray = {
     //  0    1    2    3    4    5    6    7    8    9
     -1, 108, 96, 114, 102, -1, -1, -1, 84, 90, //  0- 9
     -1, 60,  -1, -1,  -1,  -1, 78, 66, -1, -1, // 10-19
     -1, -1,  72, 48,  -1,  -1, -1, -1, -1, 54  // 20-29
 };
-const std::array<int, 30> colorComboLookupEdgesArray2Corner = {
+inline constexpr std::array<int, 30> colorComboLookupEdgesArray2Corner = {
     //  0    1    2    3    4    5    6    7    8    9
     0, 108, 96, 114, 102, 0, 0, 0, 84, 90, //  0- 9
     0, 0,   0,  0,   0,   0, 0, 0, 0,  0,  // 10-19
     0, 0,   0,  0,   0,   0, 0, 0, 0,  0   // 20-29
 };
-const std::array<int, 30> colorComboLookupEdgesArray3Corner = {
+inline constexpr std::array<int, 30> colorComboLookupEdgesArray3Corner = {
     //  0    1    2    3    4    5    6    7    8    9
     0, 108, 96, 114, 102, 0, 0,  0, 84, 90, //  0- 9
     0, 0,   0,  0,   0,   0, 78, 0, 0,  0,  // 10-19
     0, 0,   0,  0,   0,   0, 0,  0, 0,  0   // 20-29
 };
-const std::unordered_map<int, int> colorComboLookupEdges{
+inline const std::unordered_map<int, int> colorComboLookupEdges{
     {23, 48}, // YELLOW, green
     {29, 54}, // YELLOW, orange
     {11, 60}, // YELLOW, red
@@ -140,7 +142,7 @@ const std::unordered_map<int, int> colorComboLookupEdges{
 
     {2, 96},  {4, 102}, {1, 108}, {3, 114}};
 
-const std::array<int, 150> colorComboLookupCornersArray = {
+inline constexpr std::array<int, 150> colorComboLookupCornersArray = {
     -1, -1, -1, -1, -1, -1, -1, -1, 30, 42, //  0-  9
     -1, -1, -1, 30, -1, -1, 24, -1, -1, 42, //  10- 19
     -1, -1, 36, -1, -1, -1, 24, 36, -1, -1, //  20- 29
@@ -158,7 +160,7 @@ const std::array<int, 150> colorComboLookupCornersArray = {
     -1, -1, 0,  -1, -1, -1, -1, -1, -1, -1, // 140-149
 };
 
-const std::array<int, 150> colorComboLookupCornersArray2Corner = {
+inline constexpr std::array<int, 150> colorComboLookupCornersArray2Corner = {
     0, 0, 0, 0,  0, 0, 0, 0, 30, 42, //  0-  9
     0, 0, 0, 30, 0, 0, 0, 0, 0,  42, //  10- 19
     0, 0, 0, 0,  0, 0, 0, 0, 0,  0,  //  20- 29
@@ -175,7 +177,7 @@ const std::array<int, 150> colorComboLookupCornersArray2Corner = {
     0, 0, 0, 0,  0, 0, 0, 0, 0,  0,  // 130-139
     0, 0, 0, 0,  0, 0, 0, 0, 0,  0,  // 140-149
 };
-const std::array<int, 150> colorComboLookupCornersArray3Corner = {
+inline constexpr std::array<int, 150> colorComboLookupCornersArray3Corner = {
     0, 0, 0, 0,  0, 0, 0,  0, 30, 42, //  0-  9
     0, 0, 0, 30, 0, 0, 24, 0, 0,  42, //  10- 19
     0, 0, 0, 0,  0, 0, 24, 0, 0,  0,  //  20- 29
@@ -192,7 +194,7 @@ const std::array<int, 150> colorComboLookupCornersArray3Corner = {
     0, 0, 0, 0,  0, 0, 0,  0, 0,  0,  // 130-139
     0, 0, 0, 0,  0, 0, 0,  0, 0,  0,  // 140-149
 };
-const std::unordered_map<int, int> colorComboLookupCorners{
+inline const std::unordered_map<int, int> colorComboLookupCorners{
     {137, 0},  // YELLOW, orange, green => green * 36 + orange * 6 + yellow
                // (smallest value first) | BitPosition 0
     {59, 6},   // yellow, green, RED | BitPosition 6, aka 0bHEREXXXXXX (x is
@@ -215,7 +217,7 @@ const std::unordered_map<int, int> colorComboLookupCorners{
     {68, 18},
     {27, 36},
     {142, 0}};
-} // namespace RubikoslavConst
+} // namespace detail
 
 class Cuboslav {
 public:
@@ -291,5 +293,7 @@ private:
   void turnYellow2();
   void turnYellow3();
 };
+
+} // namespace rubikoslav
 
 #endif // RUBIKOSLAV_CUBOSLAV_HPP

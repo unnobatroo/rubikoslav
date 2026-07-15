@@ -230,6 +230,22 @@ class Rubikoslav:
             result.elapsed_microseconds = (perf_counter_ns() - started) // 1_000
         return result
 
+    def solve_scramble(
+        self,
+        scramble: str | Sequence[str],
+        max_depth: int | None = None,
+    ) -> SolveResult:
+        """Solve standard cube notation without exposing the sticker array."""
+
+        moves = scramble.split() if isinstance(scramble, str) else list(scramble)
+        cube = CuboslavWrapper()
+        try:
+            for move in moves:
+                cube.move(move)
+        except Exception as error:
+            return SolveResult(error=str(error))
+        return self.solve(cube.getCube(), max_depth=max_depth, history=moves)
+
     def solve_codes(self, state: Sequence[int]) -> list[str]:
         """Solve and return the engine's compact single-character move codes."""
 

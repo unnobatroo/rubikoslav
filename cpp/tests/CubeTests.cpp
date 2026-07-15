@@ -9,6 +9,9 @@
 
 namespace {
 
+using rubikoslav::Cuboslav;
+using rubikoslav::Move;
+
 int failures = 0;
 
 void expect(const bool condition, const std::string &message) {
@@ -23,7 +26,7 @@ std::vector<int> stateOf(const Cuboslav &cube) {
 }
 
 void testMoves() {
-  for (const char code : MoveConst::moves) {
+  for (const char code : rubikoslav::detail::moves) {
     const Move move(code);
     Cuboslav cube;
     cube.turn(move);

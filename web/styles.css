@@ -217,7 +217,7 @@ select:focus-visible {
 }
 
 .cube-scene {
-  --circle-lift: -20px;
+  --circle-lift: -40px;
   position: relative;
   z-index: 1;
   min-height: 456px;
@@ -966,6 +966,7 @@ dialog form>label {
   }
 
   .cube-scene {
+    --circle-lift: -34px;
     min-height: 420px;
   }
 

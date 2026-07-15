@@ -1,10 +1,13 @@
 
+#ifndef RUBIKOSLAV_MOVE_HPP
+#define RUBIKOSLAV_MOVE_HPP
+
+#include <array>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#ifndef RUBIKOSLAV_MOVE_HPP
-#define RUBIKOSLAV_MOVE_HPP
+namespace rubikoslav {
 
 class Move {
 public:
@@ -47,11 +50,14 @@ public:
                          const std::string &end = "\n");
 };
 
-namespace MoveConst {
-const Move illegalMove{7, 7};
+namespace detail {
+inline const Move illegalMove{7, 7};
 
-constexpr char moves[18] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
-                            'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R'};
-} // namespace MoveConst
+inline constexpr std::array<char, 18> moves = {'A', 'B', 'C', 'D', 'E', 'F',
+                                               'G', 'H', 'I', 'J', 'K', 'L',
+                                               'M', 'N', 'O', 'P', 'Q', 'R'};
+} // namespace detail
+
+} // namespace rubikoslav
 
 #endif // RUBIKOSLAV_MOVE_HPP

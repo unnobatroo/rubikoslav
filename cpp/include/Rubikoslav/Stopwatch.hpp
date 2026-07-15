@@ -1,8 +1,10 @@
 
-#include <chrono>
-
 #ifndef RUBIKOSLAV_TIMER_HPP
 #define RUBIKOSLAV_TIMER_HPP
+
+#include <chrono>
+
+namespace rubikoslav {
 
 class Stopwatch {
 public:
@@ -30,5 +32,7 @@ public:
 private:
   std::chrono::time_point<std::chrono::high_resolution_clock> start;
 };
+
+} // namespace rubikoslav
 
 #endif // RUBIKOSLAV_TIMER_HPP

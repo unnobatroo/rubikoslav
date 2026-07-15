@@ -48,6 +48,21 @@ class SolverTests(unittest.TestCase):
             cube.move(move)
         self.assertEqual(tuple(cube.getCube()), SOLVED_STATE)
 
+    def test_public_api_solves_standard_scramble_notation(self) -> None:
+        result = Rubikoslav().solve_scramble("R U F2")
+        self.assertTrue(result.success, result.error)
+        self.assertLessEqual(len(result.moves), 3)
+
+        cube = CuboslavWrapper()
+        for move in ("R", "U", "F2", *result.moves):
+            cube.move(move)
+        self.assertEqual(tuple(cube.getCube()), SOLVED_STATE)
+
+    def test_public_api_reports_invalid_scramble_notation(self) -> None:
+        result = Rubikoslav().solve_scramble("R nope")
+        self.assertFalse(result.success)
+        self.assertTrue(result.error)
+
     def test_every_single_turn_gets_the_exact_one_move_solution(self) -> None:
         for face in "ULFBRD":
             for suffix, inverse in (("", "'"), ("2", "2"), ("'", "")):

@@ -8,7 +8,9 @@
 
 #include "Rubikoslav/Cuboslav.hpp"
 
-std::array<Move, 18> RubikoslavConst::everyMove = {
+namespace rubikoslav {
+
+std::array<Move, 18> detail::everyMove = {
     Move('A'), Move('B'), Move('C'), Move('D'), Move('E'), Move('F'),
     Move('G'), Move('H'), Move('I'), Move('J'), Move('K'), Move('L'),
     Move('M'), Move('N'), Move('O'), Move('P'), Move('Q'), Move('R')};
@@ -91,7 +93,7 @@ CubeValidationResult Cuboslav::validate(const std::vector<int> &state) {
   std::map<Corner, int> cornerByColors;
   for (std::size_t i = 0; i < cornerFacelets.size(); ++i) {
     for (std::size_t j = 0; j < 3; ++j) {
-      solvedCorners[i][j] = RubikoslavConst::solvedCube[cornerFacelets[i][j]];
+      solvedCorners[i][j] = detail::solvedCube[cornerFacelets[i][j]];
     }
     cornerByColors[sorted(solvedCorners[i])] = static_cast<int>(i);
   }
@@ -149,7 +151,7 @@ CubeValidationResult Cuboslav::validate(const std::vector<int> &state) {
   std::map<Edge, int> edgeByColors;
   for (std::size_t i = 0; i < edgeFacelets.size(); ++i) {
     for (std::size_t j = 0; j < 2; ++j) {
-      solvedEdges[i][j] = RubikoslavConst::solvedCube[edgeFacelets[i][j]];
+      solvedEdges[i][j] = detail::solvedCube[edgeFacelets[i][j]];
     }
     edgeByColors[sorted(solvedEdges[i])] = static_cast<int>(i);
   }
@@ -233,7 +235,7 @@ std::array<unsigned int, 4> Cuboslav::hashCrossAnd2Corners() {
       std::array<int, 3> output = {0, 0, 0};
 
       for (int newIx = 0; newIx < 3; newIx++) {
-        auto piece0 = RubikoslavConst::physicalPieces[indices[newIx]];
+        auto piece0 = detail::physicalPieces[indices[newIx]];
         auto currentFace = faces[newIx];
         output[newIx] = faces[newIx];
 
@@ -307,7 +309,7 @@ std::array<unsigned int, 4> Cuboslav::hashCrossAnd2CornersV1() const {
       std::array<int, 3> output = {0, 0, 0};
 
       for (int newIx = 0; newIx < 3; newIx++) {
-        const auto &piece0 = RubikoslavConst::physicalPieces[indices[newIx]];
+        const auto &piece0 = detail::physicalPieces[indices[newIx]];
         auto currentFace = faces[newIx];
         output[newIx] = faces[newIx];
 
@@ -378,7 +380,7 @@ std::array<unsigned int, 4> Cuboslav::hashCrossAnd2CornersV2() {
       std::array<int, 3> output = {0, 0, 0};
 
       for (int newIx = 0; newIx < 3; newIx++) {
-        const auto &piece0 = RubikoslavConst::physicalPieces[indices[newIx]];
+        const auto &piece0 = detail::physicalPieces[indices[newIx]];
         const auto currentFace = faces[newIx];
         output[newIx] = faces[newIx];
 
@@ -445,7 +447,7 @@ std::array<unsigned int, 4> Cuboslav::hashCrossAnd3Corners() {
       std::array<int, 3> output = {0, 0, 0};
 
       for (int newIx = 0; newIx < 3; newIx++) {
-        const auto &piece0 = RubikoslavConst::physicalPieces[indices[newIx]];
+        const auto &piece0 = detail::physicalPieces[indices[newIx]];
         auto currentFace = faces[newIx];
         output[newIx] = faces[newIx];
 
@@ -507,7 +509,7 @@ std::array<unsigned int, 4> Cuboslav::hashFirstTwoLayers() {
       auto face1 = cube[ix1];
       auto face2 = cube[ix2];
 
-      auto piece0 = RubikoslavConst::physicalPieces[ix0];
+      auto piece0 = detail::physicalPieces[ix0];
       short output0 = face0;
       for (auto tmp : piece0) {
         if (cube[tmp] == 5) {
@@ -515,7 +517,7 @@ std::array<unsigned int, 4> Cuboslav::hashFirstTwoLayers() {
         }
       }
 
-      auto piece1 = RubikoslavConst::physicalPieces[ix1];
+      auto piece1 = detail::physicalPieces[ix1];
       short output1 = face1;
       for (auto tmp : piece1) {
         if (cube[tmp] == 5) {
@@ -523,7 +525,7 @@ std::array<unsigned int, 4> Cuboslav::hashFirstTwoLayers() {
         }
       }
 
-      auto piece2 = RubikoslavConst::physicalPieces[ix2];
+      auto piece2 = detail::physicalPieces[ix2];
       short output2 = face2;
       for (auto tmp : piece2) {
         if (cube[tmp] == 5) {
@@ -646,7 +648,7 @@ bool Cuboslav::solvedFirstTwoLayers() const {
 
   for (const int face : {1, 2, 4, 5}) {
     const int offset = face * 8;
-    const short expectedColor = RubikoslavConst::solvedCube[offset];
+    const short expectedColor = detail::solvedCube[offset];
     for (int sticker = 0; sticker < 5; ++sticker) {
       if (cube[offset + sticker] != expectedColor) {
         return false;
@@ -1590,3 +1592,5 @@ void Cuboslav::turnGreen1() {
   cube[8] = cube[0];
   cube[0] = tmp;
 }
+
+} // namespace rubikoslav

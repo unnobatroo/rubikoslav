@@ -6,6 +6,8 @@
 #include "Rubikoslav/Cuboslav.hpp"
 #include "Rubikoslav/Move.hpp"
 
+namespace rubikoslav {
+
 Move::Move(char m) : move(m) {
   constexpr char moves[18] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
                               'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R'};
@@ -32,7 +34,7 @@ Move::Move(char m) : move(m) {
 void Move::updateFaceRot() {
   int moveIndex = -1;
   for (int i = 0; i < 18; ++i) {
-    if (MoveConst::moves[i] == move) {
+    if (detail::moves[i] == move) {
       moveIndex = i;
       break;
     }
@@ -60,7 +62,7 @@ Move::Move(const int face, const int rotations)
         "Move face must be 0-5 and rotations must be 1-3");
   }
   const int moveId = face * 3 + rotations - 1;
-  move = MoveConst::moves[moveId];
+  move = detail::moves[moveId];
 }
 
 void Move::updateChar() {
@@ -117,6 +119,8 @@ Move Move::fromNotation(const std::string &notation) {
               rotations);
 }
 
+namespace {
+
 void insertMove(std::vector<Move> &moves, Move &m) {
   if (moves.empty()) {
     moves.emplace_back(m);
@@ -131,7 +135,7 @@ void insertMove(std::vector<Move> &moves, Move &m) {
       moves.back().updateChar();
     }
   } else if ((moves.size() > 1) and
-             (moves.back().face == RubikoslavConst::oppositeFaceAll[m.face]) and
+             (moves.back().face == detail::oppositeFaceAll[m.face]) and
              (moves.at(moves.size() - 2).face == m.face)) {
     auto ix = moves.size() - 2;
     moves.at(ix).rotations = (moves.at(ix).rotations + m.rotations) % 4;
@@ -144,6 +148,8 @@ void insertMove(std::vector<Move> &moves, Move &m) {
     moves.emplace_back(m);
   }
 }
+
+} // namespace
 
 std::vector<Move>
 Move::combineMovesWithLookupMoves(const std::vector<Move> &moves,
@@ -285,3 +291,5 @@ void Move::printMoves(const std::vector<char> &moves, const std::string &end) {
 
   std::cout << end;
 }
+
+} // namespace rubikoslav

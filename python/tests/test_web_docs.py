@@ -12,12 +12,16 @@ class WebDocsTests(unittest.TestCase):
         guide = (directory / "api.html").read_text(encoding="utf-8")
 
         self.assertIn('href="api.html"', index)
+        self.assertIn("https://unnobatroo.github.io/rubikoslav/", index)
+        self.assertIn(">Wiki<", index)
         self.assertIn("Python API", index)
         self.assertIn("https://jalols.page", index)
         self.assertIn("By Jaloliddin Ismailov", index)
-        self.assertIn("Rubikoslav().solve", guide)
+        self.assertIn("pip install rubikoslav", guide)
+        self.assertIn('Rubikoslav().solve_scramble("R U F2")', guide)
+        self.assertIn("Rubikoslav().solve(state)", guide)
         self.assertIn("/api/solve", guide)
-        self.assertIn("JavaScript sends the current position", guide)
+        self.assertIn("Full documentation", guide)
 
 
 if __name__ == "__main__":
