@@ -89,7 +89,7 @@ export RUBIKOSLAV_CACHE_DIR=/absolute/path/to/cache
 uv run rubikoslav doctor --strict
 ```
 
-Deleting the cache affects first-run time, not correctness. The tables are generated again when required.
+Deleting the cache affects first run time. The tables are generated again when required.
 
 ## Development
 
