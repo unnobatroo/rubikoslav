@@ -64,9 +64,7 @@ int permutationParity(const Container &permutation) {
 
 } // namespace
 
-Cuboslav::Cuboslav(const std::vector<int> &state) {
-  setState(state);
-}
+Cuboslav::Cuboslav(const std::vector<int> &state) { setState(state); }
 
 CubeValidationResult Cuboslav::validate(const std::vector<int> &state) {
   if (state.size() != 48) {
@@ -684,7 +682,7 @@ bool Cuboslav::solvedBOCorner() {
 }
 
 std::vector<Move> Cuboslav::shuffle(int numMoves, bool print,
-                                          unsigned int seed) {
+                                    unsigned int seed) {
   // std::random_device dev;
 
   std::mt19937 rng;
@@ -836,9 +834,7 @@ void Cuboslav::turn(char m) {
   turn(move);
 }
 
-void Cuboslav::turn(int face, int rotations) {
-  turn(Move(face, rotations));
-}
+void Cuboslav::turn(int face, int rotations) { turn(Move(face, rotations)); }
 
 void Cuboslav::turnWhite(int rotations) {
   switch (rotations) {
