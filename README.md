@@ -1,7 +1,7 @@
 # Rubikoslav
 
-[![PyPI](https://img.shields.io/pypi/v/rubikoslav?label=PyPI)](https://pypi.org/project/rubikoslav/)
-[![Wiki](https://img.shields.io/badge/docs-wiki-2878EB?logo=materialformkdocs&logoColor=white)](https://unnobatroo.github.io/rubikoslav/)
+[![pipy](https://img.shields.io/pypi/v/rubikoslav.svg?label=PyPI)](https://pypi.org/project/rubikoslav/)
+[![wiki](https://img.shields.io/badge/docs-wiki-2878EB?logo=materialformkdocs&logoColor=white)](https://unnobatroo.github.io/rubikoslav/)
 
 Rubikoslav is a reusable 3×3 Rubik's Cube solver. It combines a C++20 cube engine, a Python API and CLI, and an animated browser visualizer. Every returned solution is replayed through the native cube before it is accepted.
 
