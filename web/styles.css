@@ -217,6 +217,7 @@ select:focus-visible {
 }
 
 .cube-scene {
+  --circle-lift: -20px;
   position: relative;
   z-index: 1;
   min-height: 456px;
@@ -239,6 +240,7 @@ select:focus-visible {
   box-shadow:
     inset 0 0 70px rgba(0, 0, 0, .52),
     0 28px 70px rgba(0, 0, 0, .32);
+  transform: translateY(var(--circle-lift));
   pointer-events: none;
 }
 
@@ -968,7 +970,7 @@ dialog form>label {
   }
 
   .cube {
-    --cube-lift: -22px;
+    --cube-lift: -42px;
   }
 
   .move-pad {
