@@ -5,14 +5,14 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "rubikoslav"
 version = "0.4.1"
-description = "Rubik's Cube adaptive solver engine with a visualisation layer"
+description = "Adaptive Rubik's cube solver with visualisation."
 authors = [{name = "Jaloliddin Ismailov"}]
 readme = "README.md"
 requires-python = ">=3.10"
 license = "GPL-3.0"
 license-files = ["LICENSE"]
 dependencies = ["cube-solver==1.1.4", "typing-extensions==4.15.0"]
-keywords = ["rubiks-cube", "solver", "cpp", "pybind11", "visualisation", "visualization"]
+keywords = ["rubiks-cube", "solver", "cpp", "pybind11", "visualisation"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",
