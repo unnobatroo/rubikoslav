@@ -71,7 +71,7 @@ class CliTests(unittest.TestCase):
         self.assertIn('width: min(54vw, 560px)', styles)
         self.assertIn('grid-template-rows: auto minmax(456px, 1fr)', styles)
         self.assertNotIn('  height: 456px;', styles)
-        self.assertIn('--cube-lift: -28px', styles)
+        self.assertIn('--cube-lift: -46px', styles)
         self.assertIn('--cube-lift: -22px', styles)
         self.assertIn('translateY(var(--cube-lift)) rotateX', script)
         self.assertIn("let positionMoves = []", script)
