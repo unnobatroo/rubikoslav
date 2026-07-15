@@ -41,8 +41,6 @@ Imagine you want to study the position made by `R U F2`.
 
 **Load route** accepts normal notation such as `R U R' U'`. Compact `A`–`R` engine codes also work where they do not conflict with a face letter.
 
-The cube stays visually centered inside the dark circular stage. Drag anywhere on that stage to inspect another angle; the circular-arrow button restores the starting view without changing the cube state.
-
 The raw sticker array is handled automatically. You only need it when calling the Python API directly.
 
 ## How the solver works
