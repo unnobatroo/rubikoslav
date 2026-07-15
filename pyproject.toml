@@ -5,12 +5,12 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "rubikoslav"
 version = "0.4.0"
-description = "C++ Rubik's Cube engine, two-phase solver, Python API, and interactive visualizer"
+description = "C++ Rubik's Cube engine, optimal solver, Python API, and interactive visualizer"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "GPL-3.0-only"
 license-files = ["LICENSE"]
-dependencies = ["rubik-solver-py==0.1.1"]
+dependencies = ["cube-solver==1.1.4", "typing-extensions==4.15.0"]
 keywords = ["rubiks-cube", "solver", "cpp", "pybind11", "visualization"]
 classifiers = [
   "Development Status :: 4 - Beta",

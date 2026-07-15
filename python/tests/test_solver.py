@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from random import Random
 import unittest
 
-from rubik_solver import Cube
+from cube_solver import Cube
 
 from rubikoslav import (
     Rubikoslav,
@@ -10,6 +11,8 @@ from rubikoslav import (
     SOLVED_STATE,
     solve_payload,
     state_to_facelets,
+    state_to_optimal_repr,
+    verify_route,
 )
 
 
@@ -26,9 +29,9 @@ class SolverTests(unittest.TestCase):
                 move = face + suffix
                 native = CuboslavWrapper()
                 native.move(move)
-                standard = Cube().move(move)
+                standard = Cube(move)
                 self.assertEqual(
-                    state_to_facelets(native.getCube()), standard.as_string(), move
+                    state_to_optimal_repr(native.getCube()), repr(standard), move
                 )
 
     def test_all_faces_scramble_solves_and_replays(self) -> None:
@@ -52,17 +55,40 @@ class SolverTests(unittest.TestCase):
                 result = Rubikoslav().solve(cube.getCube())
                 self.assertTrue(result.success, result.error)
                 self.assertEqual(result.moves, [face + inverse])
-                self.assertEqual(result.backend, "exact-short-search")
+                self.assertEqual(result.backend, "optimal-ida-star")
 
-    def test_nearby_positions_use_a_provably_shortest_route(self) -> None:
+    def test_five_move_position_uses_a_provably_shortest_route(self) -> None:
         cube = CuboslavWrapper()
-        cube.move("R")
-        cube.move("U")
+        for move in ("R", "U", "F", "L", "D"):
+            cube.move(move)
         result = Rubikoslav().solve(cube.getCube())
 
         self.assertTrue(result.success, result.error)
-        self.assertEqual(len(result.moves), 2)
-        self.assertEqual(result.backend, "exact-short-search")
+        self.assertEqual(result.moves, ["D'", "L'", "F'", "U'", "R'"])
+
+    def test_five_move_positions_never_return_longer_routes(self) -> None:
+        random = Random(20260715)
+        faces = "ULFBRD"
+        suffixes = ("", "2", "'")
+        solver = Rubikoslav()
+
+        for _ in range(20):
+            cube = CuboslavWrapper()
+            scramble: list[str] = []
+            previous_face = ""
+            for _ in range(5):
+                face = random.choice([face for face in faces if face != previous_face])
+                move = face + random.choice(suffixes)
+                cube.move(move)
+                scramble.append(move)
+                previous_face = face
+
+            state = cube.getCube()
+            result = solver.solve(state)
+            self.assertTrue(result.success, msg=f"{' '.join(scramble)}: {result.error}")
+            self.assertLessEqual(len(result.moves), 5, msg=" ".join(scramble))
+            verify_route(state, result.moves)
+        self.assertEqual(result.backend, "optimal-ida-star")
 
     def test_compact_codes_replay(self) -> None:
         cube = CuboslavWrapper()
@@ -83,13 +109,13 @@ class SolverTests(unittest.TestCase):
     def test_web_payload_uses_the_native_verified_solver(self) -> None:
         cube = CuboslavWrapper()
         cube.move("R")
-        status, payload = solve_payload({"state": cube.getCube(), "maxDepth": 22})
+        status, payload = solve_payload({"state": cube.getCube()})
 
         self.assertEqual(status, 200)
         self.assertTrue(payload["success"])
-        self.assertEqual(payload["backend"], "exact-short-search")
+        self.assertEqual(payload["backend"], "optimal-ida-star")
 
-    def test_web_payload_rejects_unbounded_depth(self) -> None:
+    def test_web_payload_rejects_excessive_optional_depth(self) -> None:
         with self.assertRaisesRegex(ValueError, "between 0 and 30"):
             solve_payload({"state": list(SOLVED_STATE), "maxDepth": 31})
 

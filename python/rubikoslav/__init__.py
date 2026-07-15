@@ -7,6 +7,7 @@ from .solver import (
     SolveResult,
     solve_payload,
     state_to_facelets,
+    state_to_optimal_repr,
     verify_route,
 )
 
@@ -17,6 +18,7 @@ __all__ = [
     "SolveResult",
     "solve_payload",
     "state_to_facelets",
+    "state_to_optimal_repr",
     "verify_route",
 ]
 __version__ = "0.4.0"

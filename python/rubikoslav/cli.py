@@ -68,17 +68,17 @@ def run_doctor(strict: bool = False) -> int:
             smoke_result = Rubikoslav().solve(smoke_cube.getCube())
             solver_ok = facelets_ok and smoke_result.success
             detail = (
-                "ok (generated-table solve and native replay)"
+                "ok (optimal IDA* solve and native replay)"
                 if solver_ok
                 else smoke_result.error
             )
         else:
             solver_ok = facelets_ok
             detail = "available (tables initialize on first solve)"
-        print(f"  Two-phase solver:   {detail}")
+        print(f"  Optimal solver:     {detail}")
     except Exception as error:
         solver_ok = False
-        print(f"  Two-phase solver:   failed ({error})")
+        print(f"  Optimal solver:     failed ({error})")
 
     print("  External data:      not required")
     healthy = native_ok and web_ok and solver_ok
@@ -103,7 +103,7 @@ def serve_visualizer(host: str, port: int, open_browser: bool) -> int:
 
         def do_GET(self) -> None:  # noqa: N802 - inherited HTTP handler API
             if self.path == "/api/solve":
-                self.send_json(200, {"success": True, "backend": "two-phase"})
+                self.send_json(200, {"success": True, "backend": "optimal-ida-star"})
                 return
             super().do_GET()
 
@@ -147,7 +147,7 @@ def serve_visualizer(host: str, port: int, open_browser: bool) -> int:
     return 0
 
 
-def solve_scramble(scramble: str, max_depth: int, verbose: bool) -> int:
+def solve_scramble(scramble: str, max_depth: int | None, verbose: bool) -> int:
     """Solve a notation scramble from the command line."""
 
     cube = CuboslavWrapper()
@@ -199,8 +199,8 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument(
         "--max-depth",
         type=int,
-        default=22,
-        help="maximum solution length (default: 22)",
+        default=None,
+        help="optional maximum solution length (default: search until solved)",
     )
     result.add_argument(
         "--verbose",

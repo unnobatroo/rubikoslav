@@ -26,6 +26,7 @@ class CliTests(unittest.TestCase):
     def test_visualizer_auto_solves_on_play_and_keeps_typed_routes(self) -> None:
         html = (web_directory() / "index.html").read_text(encoding="utf-8")
         script = (web_directory() / "app.js").read_text(encoding="utf-8")
+        styles = (web_directory() / "styles.css").read_text(encoding="utf-8")
 
         self.assertNotIn('id="state-output"', html)
         self.assertNotIn("<textarea", html)
@@ -53,6 +54,21 @@ class CliTests(unittest.TestCase):
         self.assertGreater(html.index('class="playback"'), html.index('id="timeline"'))
         self.assertIn('id="timeline-label"', html)
         self.assertIn('id="timeline-count"', html)
+        self.assertGreater(
+            html.index('id="reset-position"'),
+            html.index('class="move-feed-heading"'),
+        )
+        self.assertLess(html.index('id="reset-position"'), html.index('id="timeline"'))
+        section_actions = html[
+            html.index('class="section-actions"'):html.index('id="move-pad"')
+        ]
+        self.assertNotIn('id="reset-position"', section_actions)
+        self.assertIn('id="icon-shuffle"', html)
+        self.assertIn('id="icon-route"', html)
+        self.assertIn('id="icon-play"', html)
+        self.assertIn("setButtonContent(playButton, 'pause', 'Pause')", script)
+        self.assertIn('bottom: 22px', styles)
+        self.assertIn('width: min(54vw, 560px)', styles)
         self.assertIn("let positionMoves = []", script)
         self.assertIn("positionMoves.push(move)", script)
         self.assertIn("showMessage('Position and move history reset.'", script)
@@ -174,7 +190,7 @@ class CliTests(unittest.TestCase):
         self.assertEqual(run_doctor(strict=False), 0)
 
     def test_cli_solves_without_external_data(self) -> None:
-        self.assertEqual(solve_scramble("R U B' D2 L F2", 22, False), 0)
+        self.assertEqual(solve_scramble("R U B' D2 L F2", None, False), 0)
 
 
 if __name__ == "__main__":

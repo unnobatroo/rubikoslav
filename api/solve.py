@@ -11,8 +11,9 @@ from urllib.parse import urlsplit
 
 if os.environ.get("VERCEL"):
     # Vercel functions may only write temporary files under /tmp. The solver's
-    # generated lookup tables are cached here after the first request.
+    # generated transition and pruning tables are cached here after first use.
     os.environ["HOME"] = "/tmp"
+    os.environ["RUBIKOSLAV_CACHE_DIR"] = "/tmp/rubikoslav-optimal"
 
 from rubikoslav import Rubikoslav, solve_payload
 
@@ -46,7 +47,7 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802 - Vercel handler API
         path = urlsplit(self.path).path
         if path == "/api/solve":
-            self.send_json(200, {"success": True, "backend": "two-phase"})
+            self.send_json(200, {"success": True, "backend": "optimal-ida-star"})
             return
         asset = _STATIC_FILES.get(path)
         if asset is None or not asset.is_file():

@@ -13,7 +13,7 @@ let routeIndex = 0;
 let routeKind = null;
 let positionMoves = [];
 let playTimer = null;
-let rotationX = -24;
+let rotationX = -14;
 let rotationY = -36;
 let dragging = false;
 let dragOrigin = null;
@@ -32,6 +32,21 @@ const solutionInput = document.querySelector('#solution-input');
 const routeDialog = document.querySelector('#route-dialog');
 const routeForm = document.querySelector('#route-form');
 const routeMessage = document.querySelector('#route-message');
+
+function setButtonContent(button, icon, label) {
+  if (button.dataset.icon === icon && button.dataset.label === label) return;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.classList.add('button-icon');
+  svg.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  use.setAttribute('href', `#icon-${icon}`);
+  svg.append(use);
+  const text = document.createElement('span');
+  text.textContent = label;
+  button.replaceChildren(svg, text);
+  button.dataset.icon = icon;
+  button.dataset.label = label;
+}
 
 function faceCoordinates(face, row, column) {
   if (face === 'F') return { x: column - 1, y: row - 1, z: 1 };
@@ -272,16 +287,16 @@ function stopPlayback() {
 
 function updatePlayButton() {
   if (solving) {
-    playButton.textContent = 'Solving…';
+    setButtonContent(playButton, 'loader', 'Solving…');
     playButton.setAttribute('aria-label', 'Solving current position');
   } else if (playTimer) {
-    playButton.textContent = 'Pause';
+    setButtonContent(playButton, 'pause', 'Pause');
     playButton.setAttribute('aria-label', 'Pause solution');
   } else if (!route.length && !arraysEqual(state, solvedState)) {
-    playButton.textContent = 'Solve & play';
+    setButtonContent(playButton, 'play', 'Solve & play');
     playButton.setAttribute('aria-label', 'Solve and play current position');
   } else {
-    playButton.textContent = 'Play';
+    setButtonContent(playButton, 'play', 'Play');
     playButton.setAttribute('aria-label', 'Play solution');
   }
 }
@@ -391,7 +406,7 @@ scene.addEventListener('pointermove', (event) => {
 scene.addEventListener('pointerup', () => { dragging = false; });
 
 document.querySelector('#reset-view').addEventListener('click', () => {
-  rotationX = -24;
+  rotationX = -14;
   rotationY = -36;
   updateCamera();
 });
@@ -448,12 +463,12 @@ async function solveCurrentPosition(autoplay = false) {
   setSolvingControls(true);
   renderTimeline();
   renderCube();
-  showMessage('Preparing the two-phase solver. The first solve may take a few seconds.');
+  showMessage('Preparing the optimal solver. The first solve may take a few seconds.');
   try {
     const response = await fetch('/api/solve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ state: capturedState, maxDepth: 22 }),
+      body: JSON.stringify({ state: capturedState }),
     });
     const payload = await response.json();
     if (!response.ok || !payload.success) throw new Error(payload.error || 'The solver request failed.');

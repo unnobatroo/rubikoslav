@@ -1,13 +1,16 @@
-"""Deterministic two-phase solving for the native 48-sticker cube model."""
+"""Optimal IDA* solving for the native 48-sticker cube model."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import os
+from pathlib import Path
 from threading import Lock
 from time import perf_counter_ns
 from typing import Any, Mapping, Sequence
 
-from rubik_solver import Cube, init_solver, solve as solve_two_phase
+from cube_solver import Cube as OptimalCube
+from cube_solver import Korf
 
 from .CuboslavWrapper import CuboslavWrapper
 
@@ -15,7 +18,7 @@ SOLVED_STATE = (0,) * 8 + (1,) * 8 + (2,) * 8 + (5,) * 8 + (4,) * 8 + (3,) * 8
 
 # The native model stores the eight non-center stickers for each color face in
 # its historical layout. These indices translate that layout into the standard
-# URFDLB row-major facelet string used by two-phase solvers. None is the fixed
+# URFDLB row-major facelet string used by cubie solvers. None is the fixed
 # center sticker, which is not present in the native 48-sticker representation.
 _FACELET_INDICES: dict[str, tuple[int | None, ...]] = {
     "U": (0, 1, 2, 3, None, 4, 5, 6, 7),
@@ -31,19 +34,10 @@ _NOTATION_TO_CODE = {
     for face_index, face in enumerate("ULFBRD")
     for turn_index, suffix in enumerate(("", "2", "'"))
 }
-_MOVES = tuple(
-    face + suffix for face in "ULFBRD" for suffix in ("", "2", "'")
-)
-_INVERSE_MOVE = {
-    move: move if move.endswith("2") else move[0] if move.endswith("'") else move + "'"
-    for move in _MOVES
-}
-_OPPOSITE_FACE = {"U": "D", "D": "U", "L": "R", "R": "L", "F": "B", "B": "F"}
-_FACE_ORDER = {face: index for index, face in enumerate("ULFBRD")}
-_EXACT_SEARCH_DEPTH = 4
+_OPTIMAL_COLOR = {"U": "W", "L": "O", "F": "G", "R": "R", "B": "B", "D": "Y"}
 _INITIALIZE_LOCK = Lock()
 _SOLVE_LOCK = Lock()
-_INITIALIZED = False
+_OPTIMAL_SOLVER: Korf | None = None
 
 
 @dataclass(slots=True)
@@ -55,7 +49,7 @@ class SolveResult:
     error: str = ""
     search_depth: int = 0
     elapsed_microseconds: int = 0
-    backend: str = "two-phase"
+    backend: str = "optimal-ida-star"
 
 
 def state_to_facelets(state: Sequence[int]) -> str:
@@ -72,6 +66,21 @@ def state_to_facelets(state: Sequence[int]) -> str:
     )
 
 
+def state_to_optimal_repr(state: Sequence[int]) -> str:
+    """Translate a native state to the optimal solver's ULFRBD color net."""
+
+    facelets = state_to_facelets(state)
+    blocks = {
+        face: facelets[index * 9:(index + 1) * 9]
+        for index, face in enumerate("URFDLB")
+    }
+    return "".join(
+        _OPTIMAL_COLOR[sticker]
+        for face in "ULFRBD"
+        for sticker in blocks[face]
+    )
+
+
 def verify_route(state: Sequence[int], moves: Sequence[str]) -> None:
     """Replay a proposed route through the native engine and reject bad output."""
 
@@ -83,107 +92,75 @@ def verify_route(state: Sequence[int], moves: Sequence[str]) -> None:
         raise RuntimeError("The solver returned a route that failed native replay")
 
 
-def _shortest_nearby_route(state: Sequence[int], max_depth: int) -> list[str] | None:
-    """Return a provably shortest route for positions at most four turns away."""
-
-    depth_limit = min(max_depth, _EXACT_SEARCH_DEPTH)
-    if depth_limit < 1:
-        return None
-
-    cube = CuboslavWrapper()
-    cube.set_cube([int(value) for value in state])
-    path: list[str] = []
-
-    def search(remaining: int, previous_face: str = "") -> bool:
-        if remaining == 0:
-            return False
-        for move in _MOVES:
-            face = move[0]
-            if face == previous_face:
-                continue
-            # Opposite faces commute. Keep only one of the two equivalent
-            # orders so the exact search does not repeat the same position.
-            if (
-                previous_face
-                and face == _OPPOSITE_FACE[previous_face]
-                and _FACE_ORDER[face] < _FACE_ORDER[previous_face]
-            ):
-                continue
-
-            cube.move(move)
-            path.append(move)
-            if tuple(cube.getCube()) == SOLVED_STATE:
-                return True
-            if search(remaining - 1, face):
-                return True
-            path.pop()
-            cube.move(_INVERSE_MOVE[move])
-        return False
-
-    for depth in range(1, depth_limit + 1):
-        if search(depth):
-            return path.copy()
-    return None
-
-
 class Rubikoslav:
-    """Public solver backed by deterministic, locally cached two-phase tables."""
+    """Public solver backed by one optimal IDA* search."""
 
     @staticmethod
     def initialize(verbose: bool = False) -> None:
-        """Generate or load the compact two-phase tables."""
+        """Generate or load transition and admissible pruning tables."""
 
-        global _INITIALIZED
-        if _INITIALIZED:
+        global _OPTIMAL_SOLVER
+        if _OPTIMAL_SOLVER is not None:
             return
         with _INITIALIZE_LOCK:
-            if not _INITIALIZED:
-                init_solver(verbose=verbose)
-                _INITIALIZED = True
+            if _OPTIMAL_SOLVER is not None:
+                return
+            configured = os.environ.get("RUBIKOSLAV_CACHE_DIR")
+            if configured:
+                cache_directory = Path(configured).expanduser()
+            elif os.environ.get("VERCEL"):
+                cache_directory = Path("/tmp/rubikoslav-optimal")
+            else:
+                cache_home = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+                cache_directory = cache_home / "rubikoslav" / "optimal"
+            cache_directory.mkdir(parents=True, exist_ok=True)
+
+            # cube-solver stores its generated tables below ./tables. Keep that
+            # implementation detail out of the repository and inside our cache.
+            previous_directory = Path.cwd()
+            try:
+                os.chdir(cache_directory)
+                _OPTIMAL_SOLVER = Korf()
+            finally:
+                os.chdir(previous_directory)
 
     def solve(
         self,
         state: Sequence[int],
-        max_depth: int = 22,
+        max_depth: int | None = None,
     ) -> SolveResult:
         """Solve a validated native cube state and verify the returned route."""
 
         started = perf_counter_ns()
         result = SolveResult()
         try:
-            if max_depth < 0:
+            if max_depth is not None and max_depth < 0:
                 raise ValueError("max_depth must be zero or greater")
 
             values = [int(value) for value in state]
-            facelets = state_to_facelets(values)
+            optimal_repr = state_to_optimal_repr(values)
             if tuple(values) == SOLVED_STATE:
                 result.success = True
                 return result
 
-            route = _shortest_nearby_route(values, max_depth)
-            if route is not None:
-                result.moves = route
-                verify_route(values, result.moves)
-                result.success = True
-                result.search_depth = len(result.moves)
-                result.backend = "exact-short-search"
-                return result
-
             self.initialize()
-            cube = Cube.from_string(facelets)
-            validation = cube.verify()
-            if validation is not True:
-                raise ValueError(f"Two-phase facelet validation failed: {validation}")
+            cube = OptimalCube(repr=optimal_repr)
+            if cube.permutation_parity is None:
+                raise ValueError("Optimal solver rejected the translated cube state")
 
-            # The web server is threaded. The dependency's global coordinate
-            # tables are read-only after initialization, but serializing its
-            # search also prevents concurrent requests from multiplying CPU use.
+            # The web server is threaded. Serialize the stateful search object
+            # and prevent concurrent optimal searches from multiplying CPU use.
             with _SOLVE_LOCK:
-                route = solve_two_phase(cube, max_depth=max_depth)
-            if route is None:
+                solver = _OPTIMAL_SOLVER
+                if solver is None:  # Defensive: initialize() must set it.
+                    raise RuntimeError("Optimal solver did not initialize")
+                solution = solver.solve(cube, max_length=max_depth)
+            if solution is None:
+                if max_depth is None:
+                    raise RuntimeError("No solution was found")
                 raise RuntimeError(f"No solution was found within {max_depth} moves")
 
-            result.moves = route.split() if route else []
+            result.moves = str(solution).split() if solution else []
             verify_route(values, result.moves)
             result.success = True
             result.search_depth = len(result.moves)
@@ -210,9 +187,10 @@ def solve_payload(
     state = payload.get("state")
     if not isinstance(state, list):
         raise ValueError("Solve request must include a state array")
-    max_depth = int(payload.get("maxDepth", 22))
-    if not 0 <= max_depth <= 30:
-        raise ValueError("maxDepth must be between 0 and 30")
+    requested_depth = payload.get("maxDepth")
+    max_depth = None if requested_depth is None else int(requested_depth)
+    if max_depth is not None and not 0 <= max_depth <= 30:
+        raise ValueError("maxDepth must be between 0 and 30 when provided")
 
     result = (solver or Rubikoslav()).solve(state, max_depth=max_depth)
     return (
