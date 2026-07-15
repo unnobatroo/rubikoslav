@@ -99,6 +99,8 @@ main {
   min-width: 0;
   padding: 28px clamp(20px, 3vw, 42px) 32px;
   overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(456px, 1fr);
   background:
     radial-gradient(circle at 50% 42%, rgba(40, 120, 235, .07), transparent 36%),
     rgba(255, 255, 255, .012);
@@ -217,7 +219,7 @@ select:focus-visible {
 .cube-scene {
   position: relative;
   z-index: 1;
-  height: 456px;
+  min-height: 456px;
   display: grid;
   place-items: center;
   perspective: 950px;
@@ -805,13 +807,17 @@ dialog form>label {
     grid-template-columns: 1fr;
   }
 
+  .stage-panel {
+    grid-template-rows: auto minmax(420px, 1fr);
+  }
+
   .control-panel {
     border-left: 0;
     border-top: 1px solid var(--line-bright);
   }
 
   .cube-scene {
-    height: 420px;
+    min-height: 420px;
   }
 
   .move-pad {

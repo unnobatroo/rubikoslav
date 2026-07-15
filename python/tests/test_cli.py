@@ -69,6 +69,8 @@ class CliTests(unittest.TestCase):
         self.assertIn("setButtonContent(playButton, 'pause', 'Pause')", script)
         self.assertIn('bottom: 22px', styles)
         self.assertIn('width: min(54vw, 560px)', styles)
+        self.assertIn('grid-template-rows: auto minmax(456px, 1fr)', styles)
+        self.assertNotIn('  height: 456px;', styles)
         self.assertIn("let positionMoves = []", script)
         self.assertIn("positionMoves.push(move)", script)
         self.assertIn("showMessage('Position and move history reset.'", script)
