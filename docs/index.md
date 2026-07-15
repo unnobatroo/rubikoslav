@@ -6,11 +6,11 @@ Every returned route is replayed through the native engine before it is accepted
 
 <div class="rubikoslav-actions" markdown="1">
 
-[Open the visualizer](https://rubikoslav.vercel.app){ .md-button .md-button--primary }
+[:material-cube-outline: Open the visualizer](https://rubikoslav.vercel.app){ .md-button .md-button--primary }
 
-[Install the package](getting-started.md){ .md-button }
+[:material-download: Install the package](getting-started.md){ .md-button }
 
-[View the source](https://github.com/unnobatroo/rubikoslav){ .md-button }
+[:fontawesome-brands-github: View the source](https://github.com/unnobatroo/rubikoslav){ .md-button }
 
 </div>
 
