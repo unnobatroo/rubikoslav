@@ -35,7 +35,6 @@ nav:
   - C++ API: cpp-api.md
   - Architecture: architecture.md
   - Development: development.md
-  - Publishing: publishing.md
   - Troubleshooting: troubleshooting.md
 
 markdown_extensions:

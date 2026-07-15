@@ -47,5 +47,4 @@ The first solve generates or loads the optimal search tables in the local cache.
 | Link the native C++ library | [C++ API](cpp-api.md) |
 | Understand the solver and browser | [Architecture](architecture.md) |
 | Build or test the repository | [Development](development.md) |
-| Create an official package release | [Publishing](publishing.md) |
 | Fix a setup or runtime problem | [Troubleshooting](troubleshooting.md) |

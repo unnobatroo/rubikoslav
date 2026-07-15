@@ -10,8 +10,6 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 if os.environ.get("VERCEL"):
-    # Vercel functions may only write temporary files under /tmp. The solver's
-    # generated transition and pruning tables are cached here after first use.
     os.environ["HOME"] = "/tmp"
     os.environ["RUBIKOSLAV_CACHE_DIR"] = "/tmp/rubikoslav-optimal"
 
