@@ -1,1 +1,4 @@
-web/generated/cube-data.js text eol=lf
+web/src/app.ts text eol=lf
+web/src/generated/cube-data.ts text eol=lf
+web/dist/app.js text eol=lf
+web/dist/generated/cube-data.js text eol=lf

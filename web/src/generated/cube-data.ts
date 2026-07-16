@@ -1,5 +1,16 @@
 // Generated from the C++ Cuboslav engine. Do not edit by hand.
-export const solvedState = [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,3,3,3,3,3,3,3,3];
+export type Face = 'U' | 'L' | 'F' | 'D' | 'R' | 'B';
+export type Move = `${Face}${'' | '2' | "'"}`;
+export type Sticker = 0 | 1 | 2 | 3 | 4 | 5;
+
+export interface FaceLayout {
+  readonly name: Face;
+  readonly center: Sticker;
+  readonly stickers: readonly (number | null)[];
+}
+
+// Browser output is compiled to web/dist/generated/cube-data.js.
+export const solvedState = [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,3,3,3,3,3,3,3,3] as const satisfies readonly Sticker[];
 
 export const faceLayouts = [
   {"name":"U","center":0,"stickers":[0,1,2,3,null,4,5,6,7]},
@@ -8,7 +19,7 @@ export const faceLayouts = [
   {"name":"D","center":5,"stickers":[24,25,26,27,null,28,29,30,31]},
   {"name":"R","center":4,"stickers":[37,35,32,38,null,33,39,36,34]},
   {"name":"B","center":3,"stickers":[47,46,45,44,null,43,42,41,40]}
-];
+] as const satisfies readonly FaceLayout[];
 
 export const movePermutations = {
   "U": [5,3,0,6,1,7,4,2,8,9,16,11,17,13,14,18,37,35,32,19,20,21,22,23,24,25,26,27,28,29,30,31,45,33,34,46,36,47,38,39,40,41,42,43,44,15,12,10],
@@ -29,4 +40,4 @@ export const movePermutations = {
   "D": [0,1,2,3,4,5,6,7,42,9,10,41,12,40,14,15,16,17,18,19,20,8,11,13,29,27,24,30,25,31,28,26,32,33,23,35,22,37,38,21,34,36,39,43,44,45,46,47],
   "D2": [0,1,2,3,4,5,6,7,39,9,10,36,12,34,14,15,16,17,18,19,20,42,41,40,31,30,29,28,27,26,25,24,32,33,13,35,11,37,38,8,23,22,21,43,44,45,46,47],
   "D'": [0,1,2,3,4,5,6,7,21,9,10,22,12,23,14,15,16,17,18,19,20,39,36,34,26,28,31,25,30,24,27,29,32,33,40,35,41,37,38,42,13,11,8,43,44,45,46,47]
-};
+} as const satisfies Record<Move, readonly number[]>;

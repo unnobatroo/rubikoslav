@@ -35,9 +35,32 @@ rubikoslav --port 4174
 
 `python3 -m http.server` can serve the visual files, but it does not provide `POST /api/solve`. Start the complete local application with `rubikoslav` or `uv run rubikoslav`.
 
+## TypeScript changes do not appear in the browser
+
+The application serves compiled files from `web/dist/`, not the source files under `web/src/`. Rebuild and verify them:
+
+```bash
+npm run build
+npm run verify
+```
+
+If `npm run verify` reports stale browser JavaScript, commit the newly compiled `web/dist/app.js` and `web/dist/generated/cube-data.js` with the TypeScript change.
+
+## Generated cube data is stale
+
+When CTest reports that `web/src/generated/cube-data.ts` is stale, rebuild the native generator and regenerate the data before compiling TypeScript:
+
+```bash
+cmake --build build/native --target generate-web-data
+npm run build
+ctest --test-dir build/native --output-on-failure
+```
+
 ## Run the full health check
 
 ```bash
+npm ci
+npm run verify
 uv sync --locked
 uv run rubikoslav doctor --strict
 uv run python -m unittest discover -s python/tests -v

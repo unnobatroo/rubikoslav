@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import re
 import unittest
 
@@ -10,6 +11,8 @@ from rubikoslav.cli import (
     solve_scramble,
     web_directory,
 )
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 class CliTests(unittest.TestCase):
@@ -21,14 +24,19 @@ class CliTests(unittest.TestCase):
 
     def test_packaged_visualizer_exists(self) -> None:
         self.assertTrue((web_directory() / "index.html").is_file())
-        self.assertTrue((web_directory() / "generated" / "cube-data.js").is_file())
+        self.assertTrue((web_directory() / "dist" / "app.js").is_file())
+        self.assertTrue(
+            (web_directory() / "dist" / "generated" / "cube-data.js").is_file()
+        )
 
     def test_visualizer_auto_solves_on_play_and_keeps_typed_routes(self) -> None:
         html = (web_directory() / "index.html").read_text(encoding="utf-8")
-        script = (web_directory() / "app.js").read_text(encoding="utf-8")
+        script = (ROOT / "web" / "src" / "app.ts").read_text(encoding="utf-8")
         styles = (web_directory() / "styles.css").read_text(encoding="utf-8")
 
         self.assertNotIn('id="state-output"', html)
+        self.assertIn('src="dist/app.js"', html)
+        self.assertNotIn('src="app.js"', html)
         self.assertNotIn("<textarea", html)
         self.assertNotIn('id="solve-position"', html)
         self.assertNotIn('id="clear-solution"', html)
@@ -78,6 +86,9 @@ class CliTests(unittest.TestCase):
         self.assertIn("bottom: 22px", styles)
         self.assertIn("width: min(54vw, 560px)", styles)
         self.assertIn("grid-template-rows: auto minmax(456px, 1fr)", styles)
+        self.assertIn("container-type: inline-size", styles)
+        self.assertIn("@container (max-width: 370px)", styles)
+        self.assertIn("grid-template-columns: 40px minmax(0, 1fr) 40px", styles)
         self.assertNotIn("  height: 456px;", styles)
         self.assertIn("--cube-lift: -66px", styles)
         self.assertIn("--cube-lift: -42px", styles)
@@ -85,7 +96,7 @@ class CliTests(unittest.TestCase):
         self.assertIn("--circle-lift: -34px", styles)
         self.assertIn("translateY(var(--circle-lift))", styles)
         self.assertIn("translateY(var(--cube-lift)) rotateX", script)
-        self.assertIn("let positionMoves = []", script)
+        self.assertIn("let positionMoves: Move[] = []", script)
         self.assertIn("positionMoves.push(move)", script)
         self.assertIn("history: positionMoves", script)
         self.assertIn(
@@ -93,15 +104,32 @@ class CliTests(unittest.TestCase):
         )
         self.assertIn("showMessage('Position and move history reset.'", script)
         self.assertIn("routeKind = 'solution'", script)
-        self.assertIn("movePermutations[standard] ? standard", script)
+        self.assertIn("isMove(standard) ? standard", script)
         self.assertIn("await solveCurrentPosition(true)", script)
         self.assertIn("const capturedState = [...state]", script)
+        self.assertIn("type SolveResponse = SolveSuccess | SolveFailure", script)
+        self.assertIn("function requiredElement<T extends Element>", script)
+        self.assertIn("function parseSolveResponse(value: unknown)", script)
 
-    def test_browser_face_layout_uses_physical_rows_and_columns(self) -> None:
-        generated = (web_directory() / "generated" / "cube-data.js").read_text(
+    def test_browser_typescript_source_and_compiled_output_exist(self) -> None:
+        source = ROOT / "web" / "src"
+        self.assertTrue((source / "app.ts").is_file())
+        generated = (source / "generated" / "cube-data.ts").read_text(
             encoding="utf-8"
         )
-        script = (web_directory() / "app.js").read_text(encoding="utf-8")
+        self.assertIn("export type Move =", generated)
+        self.assertIn("satisfies Record<Move, readonly number[]>", generated)
+        self.assertTrue((ROOT / "web" / "dist" / "app.js").is_file())
+        self.assertNotIn(
+            "web/dist",
+            (ROOT / ".gitignore").read_text(encoding="utf-8"),
+        )
+
+    def test_browser_face_layout_uses_physical_rows_and_columns(self) -> None:
+        generated = (
+            web_directory() / "dist" / "generated" / "cube-data.js"
+        ).read_text(encoding="utf-8")
+        script = (web_directory() / "dist" / "app.js").read_text(encoding="utf-8")
 
         def exported(name: str):
             match = re.search(

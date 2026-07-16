@@ -435,6 +435,7 @@ select {
   min-height: 100%;
   padding: 34px 30px;
   overflow: hidden;
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
 }
@@ -962,6 +963,34 @@ dialog form>label {
 
 .dialog-actions {
   justify-content: flex-end;
+}
+
+@container (max-width: 370px) {
+  .playback {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+  }
+
+  .playback .play {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 12px;
+  }
+
+  .speed-control {
+    grid-column: 1 / -1;
+    justify-self: end;
+    margin-left: 0;
+  }
+
+  .control-footer {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .creator-link {
+    justify-self: end;
+  }
 }
 
 @media (max-width: 1050px) {

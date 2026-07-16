@@ -1,0 +1,13 @@
+{
+  "name": "rubikoslav-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "check": "tsc --project tsconfig.json --noEmit",
+    "verify": "npm run check && tsc --project tsconfig.json --outDir build/web-check && node scripts/check_web_build.ts"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}

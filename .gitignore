@@ -1,5 +1,6 @@
 cmake-build-*
 .venv
+/node_modules/
 /build/
 /dist/
 __pycache__/

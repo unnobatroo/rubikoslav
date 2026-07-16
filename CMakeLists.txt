@@ -28,12 +28,14 @@ if(RUBIKOSLAV_BUILD_WEB)
 endif()
 
 if(SKBUILD)
-    install(DIRECTORY "${CMAKE_SOURCE_DIR}/web/"
-            DESTINATION rubikoslav/web
-            FILES_MATCHING
-            PATTERN "*.html"
-            PATTERN "*.css"
-            PATTERN "*.js")
+    install(FILES
+            "${CMAKE_SOURCE_DIR}/web/index.html"
+            "${CMAKE_SOURCE_DIR}/web/api.html"
+            "${CMAKE_SOURCE_DIR}/web/styles.css"
+            DESTINATION rubikoslav/web)
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/web/dist/"
+            DESTINATION rubikoslav/web/dist
+            FILES_MATCHING PATTERN "*.js")
 else()
     install(DIRECTORY cpp/include/Rubikoslav
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

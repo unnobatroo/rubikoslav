@@ -1,6 +1,6 @@
 # Rubikoslav
 
-Rubikoslav is a reusable 3×3 Rubik's Cube solver with a Python API, a C++20 cube engine, a command-line interface, and an interactive browser visualizer.
+Rubikoslav is a reusable 3×3 Rubik's Cube solver with a Python API, a C++20 cube engine, a command-line interface, and a strict TypeScript browser visualizer.
 
 Every returned route is replayed through the native engine before it is accepted.
 
@@ -36,3 +36,5 @@ else:
 ```
 
 The first solve generates or loads the optimal search tables in the local cache. Later runs reuse them.
+
+Developers can read [how the TypeScript browser layer stays synchronized with the native cube](browser-typescript.md).

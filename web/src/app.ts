@@ -1,39 +1,132 @@
-import { faceLayouts, movePermutations, solvedState } from './generated/cube-data.js';
+// Browser output is compiled to web/dist/app.js; edit this TypeScript source instead.
+import {
+  faceLayouts,
+  movePermutations,
+  solvedState,
+  type Face,
+  type Move,
+  type Sticker,
+} from './generated/cube-data.js';
+
+type RouteKind = 'custom' | 'solution' | null;
+type Coordinate = 'x' | 'y' | 'z';
+
+interface Coordinates {
+  x: number;
+  y: number;
+  z: number;
+}
+
+interface TurnGeometry {
+  coordinate: Coordinate;
+  layer: -1 | 1;
+  axis: 'X' | 'Y' | 'Z';
+  direction: -1 | 1;
+}
+
+interface DragOrigin {
+  x: number;
+  y: number;
+  rotationX: number;
+  rotationY: number;
+}
+
+interface SolveSuccess {
+  success: true;
+  moves: Move[];
+  elapsedMicroseconds: number;
+  optimal: boolean;
+}
+
+interface SolveFailure {
+  success: false;
+  error: string;
+}
+
+type SolveResponse = SolveSuccess | SolveFailure;
+
+function requiredElement<T extends Element>(
+  selector: string,
+  root: ParentNode = document,
+): T {
+  const element = root.querySelector<T>(selector);
+  if (!element) throw new Error(`Required element not found: ${selector}`);
+  return element;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function isMove(value: string): value is Move {
+  return Object.hasOwn(movePermutations, value);
+}
+
+function parseSolveResponse(value: unknown): SolveResponse {
+  if (!value || typeof value !== 'object') {
+    throw new Error('The solver returned an invalid response.');
+  }
+
+  const payload = value as Record<string, unknown>;
+  if (payload.success === false && typeof payload.error === 'string') {
+    return { success: false, error: payload.error };
+  }
+  if (
+    payload.success !== true
+    || !Array.isArray(payload.moves)
+    || !payload.moves.every((move) => typeof move === 'string' && isMove(move))
+    || typeof payload.elapsedMicroseconds !== 'number'
+    || typeof payload.optimal !== 'boolean'
+  ) {
+    throw new Error('The solver returned an invalid response.');
+  }
+
+  return {
+    success: true,
+    moves: payload.moves,
+    elapsedMicroseconds: payload.elapsedMicroseconds,
+    optimal: payload.optimal,
+  };
+}
+
 const internalCodes = 'ABCDEFGHIJKLMNOPQR'.split('');
-const notationByCode = Object.fromEntries(internalCodes.map((code, index) => {
-  const face = ['U', 'L', 'F', 'B', 'R', 'D'][Math.floor(index / 3)];
-  const suffix = ['', '2', "'"][index % 3];
-  return [code, face + suffix];
+const facesByCode = ['U', 'L', 'F', 'B', 'R', 'D'] as const satisfies readonly Face[];
+const suffixesByCode = ['', '2', "'"] as const;
+const notationByCode = Object.fromEntries(internalCodes.map((code, index): [string, Move] => {
+  const face = facesByCode[Math.floor(index / 3)]!;
+  const suffix = suffixesByCode[index % 3]!;
+  return [code, `${face}${suffix}`];
 }));
 
-let state = [...solvedState];
-let routeStart = [...state];
-let route = [];
+let state: Sticker[] = [...solvedState];
+let routeStart: Sticker[] = [...state];
+let route: Move[] = [];
 let routeIndex = 0;
-let routeKind = null;
-let positionMoves = [];
-let playTimer = null;
+let routeKind: RouteKind = null;
+let positionMoves: Move[] = [];
+let playTimer: number | null = null;
 let rotationX = -14;
 let rotationY = -36;
 let dragging = false;
-let dragOrigin = null;
+let dragOrigin: DragOrigin | null = null;
 let solving = false;
 let turning = false;
 
-const cube = document.querySelector('#cube');
-const scene = document.querySelector('#cube-scene');
-const timeline = document.querySelector('#timeline');
-const timelineLabel = document.querySelector('#timeline-label');
-const timelineCount = document.querySelector('#timeline-count');
-const counter = document.querySelector('#move-counter');
-const playButton = document.querySelector('#play-solution');
-const message = document.querySelector('#input-message');
-const solutionInput = document.querySelector('#solution-input');
-const routeDialog = document.querySelector('#route-dialog');
-const routeForm = document.querySelector('#route-form');
-const routeMessage = document.querySelector('#route-message');
+const cube = requiredElement<HTMLDivElement>('#cube');
+const scene = requiredElement<HTMLDivElement>('#cube-scene');
+const timeline = requiredElement<HTMLDivElement>('#timeline');
+const timelineLabel = requiredElement<HTMLSpanElement>('#timeline-label');
+const timelineCount = requiredElement<HTMLSpanElement>('#timeline-count');
+const counter = requiredElement<HTMLSpanElement>('#move-counter');
+const playButton = requiredElement<HTMLButtonElement>('#play-solution');
+const message = requiredElement<HTMLParagraphElement>('#input-message');
+const solutionInput = requiredElement<HTMLInputElement>('#solution-input');
+const routeDialog = requiredElement<HTMLDialogElement>('#route-dialog');
+const routeForm = requiredElement<HTMLFormElement>('#route-form');
+const routeMessage = requiredElement<HTMLParagraphElement>('#route-message');
+const playbackSpeed = requiredElement<HTMLSelectElement>('#playback-speed');
 
-function setButtonContent(button, icon, label) {
+function setButtonContent(button: HTMLButtonElement, icon: string, label: string): void {
   if (button.dataset.icon === icon && button.dataset.label === label) return;
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.classList.add('button-icon');
@@ -48,7 +141,7 @@ function setButtonContent(button, icon, label) {
   button.dataset.label = label;
 }
 
-function faceCoordinates(face, row, column) {
+function faceCoordinates(face: Face, row: number, column: number): Coordinates {
   if (face === 'F') return { x: column - 1, y: row - 1, z: 1 };
   if (face === 'B') return { x: 1 - column, y: row - 1, z: -1 };
   if (face === 'R') return { x: 1, y: row - 1, z: 1 - column };
@@ -57,8 +150,8 @@ function faceCoordinates(face, row, column) {
   return { x: column - 1, y: 1, z: 1 - row };
 }
 
-function buildCube() {
-  const visibleStickers = new Map();
+function buildCube(): void {
+  const visibleStickers = new Map<string, Partial<Record<Face, Sticker>>>();
   faceLayouts.forEach((face) => {
     face.stickers.forEach((index, position) => {
       const row = Math.floor(position / 3);
@@ -66,7 +159,7 @@ function buildCube() {
       const coordinates = faceCoordinates(face.name, row, column);
       const key = `${coordinates.x},${coordinates.y},${coordinates.z}`;
       const stickers = visibleStickers.get(key) ?? {};
-      stickers[face.name] = index === null ? face.center : state[index];
+      stickers[face.name] = index === null ? face.center : state[index]!;
       visibleStickers.set(key, stickers);
     });
   });
@@ -89,7 +182,7 @@ function buildCube() {
         cubie.style.transform = `translateZ(${depth})`;
 
         const stickers = visibleStickers.get(`${x},${y},${z}`) ?? {};
-        ['U', 'L', 'F', 'D', 'R', 'B'].forEach((face) => {
+        (['U', 'L', 'F', 'D', 'R', 'B'] as const).forEach((face) => {
           const side = document.createElement('div');
           side.className = 'cubie-side';
           side.dataset.face = face;
@@ -107,7 +200,7 @@ function buildCube() {
   cube.replaceChildren(fragment);
 }
 
-function renderCube() {
+function renderCube(): void {
   buildCube();
   counter.textContent = route.length
     ? `Move ${routeIndex} of ${route.length}`
@@ -116,7 +209,7 @@ function renderCube() {
   updatePlayButton();
 }
 
-function renderTimeline() {
+function renderTimeline(): void {
   timeline.replaceChildren();
   const showingRoute = route.length > 0;
   const moves = showingRoute ? route : positionMoves;
@@ -147,7 +240,7 @@ function renderTimeline() {
     chip.append(number, notation);
 
     if (showingRoute) {
-      chip.type = 'button';
+      (chip as HTMLButtonElement).type = 'button';
       if (index < routeIndex) chip.classList.add('done');
       if (index === routeIndex) chip.classList.add('active');
       chip.title = `Go to move ${index + 1}`;
@@ -158,10 +251,10 @@ function renderTimeline() {
   timeline.querySelector('.active')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
-function commitMove(move) {
+function commitMove(move: Move): void {
   const permutation = movePermutations[move];
   if (!permutation) throw new Error(`Unknown move: ${move}`);
-  state = permutation.map((source) => state[source]);
+  state = permutation.map((source) => state[source]!);
 }
 
 const turnGeometry = {
@@ -171,20 +264,20 @@ const turnGeometry = {
   "R": { "coordinate": "x", "layer": 1, "axis": "X", "direction": 1 },
   "F": { "coordinate": "z", "layer": 1, "axis": "Z", "direction": 1 },
   "B": { "coordinate": "z", "layer": -1, "axis": "Z", "direction": -1 }
-};
+} satisfies Record<Face, TurnGeometry>;
 
-function turnAngle(move) {
+function turnAngle(move: Move): number {
   const quarterTurns = move.endsWith('2') ? 2 : move.endsWith("'") ? -1 : 1;
-  return turnGeometry[move[0]].direction * quarterTurns * 90;
+  return turnGeometry[move[0] as Face].direction * quarterTurns * 90;
 }
 
-function turnDuration() {
-  const playbackDelay = Number(document.querySelector('#playback-speed').value);
+function turnDuration(): number {
+  const playbackDelay = Number(playbackSpeed.value);
   return Math.max(140, Math.min(360, playbackDelay * .58));
 }
 
-function waitForTurn(layer, duration) {
-  return new Promise((resolve) => {
+function waitForTurn(layer: HTMLDivElement, duration: number): Promise<void> {
+  return new Promise<void>((resolve) => {
     let finished = false;
     const finish = () => {
       if (finished) return;
@@ -196,12 +289,12 @@ function waitForTurn(layer, duration) {
   });
 }
 
-async function animateTurn(move) {
+async function animateTurn(move: Move): Promise<void> {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const geometry = turnGeometry[move[0]];
+  const geometry = turnGeometry[move[0] as Face];
   const layer = document.createElement('div');
   layer.className = 'turn-layer';
-  const cubies = [...cube.querySelectorAll('.cubie')].filter(
+  const cubies = [...cube.querySelectorAll<HTMLDivElement>('.cubie')].filter(
     (cubie) => Number(cubie.dataset[geometry.coordinate]) === geometry.layer,
   );
   cubies.forEach((cubie) => layer.append(cubie));
@@ -209,12 +302,12 @@ async function animateTurn(move) {
 
   const duration = turnDuration();
   layer.style.transitionDuration = `${duration}ms`;
-  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
   layer.style.transform = `rotate${geometry.axis}(${turnAngle(move)}deg)`;
   await waitForTurn(layer, duration);
 }
 
-async function applyMove(move, animate = true) {
+async function applyMove(move: Move, animate = true): Promise<boolean> {
   if (turning) return false;
   if (!movePermutations[move]) throw new Error(`Unknown move: ${move}`);
   turning = true;
@@ -230,12 +323,12 @@ async function applyMove(move, animate = true) {
   }
 }
 
-function inverse(move) {
+function inverse(move: Move): Move {
   if (move.endsWith('2')) return move;
-  return move.endsWith("'") ? move[0] : `${move}'`;
+  return (move.endsWith("'") ? move[0] : `${move}'`) as Move;
 }
 
-function clearRoute(clearInput = false, clearPositionHistory = false) {
+function clearRoute(clearInput = false, clearPositionHistory = false): void {
   stopPlayback();
   route = [];
   routeIndex = 0;
@@ -247,30 +340,30 @@ function clearRoute(clearInput = false, clearPositionHistory = false) {
   renderCube();
 }
 
-function goTo(target) {
+function goTo(target: number): void {
   if (turning) return;
   stopPlayback();
   const bounded = Math.max(0, Math.min(target, route.length));
   state = [...routeStart];
-  for (let index = 0; index < bounded; index += 1) commitMove(route[index]);
+  for (let index = 0; index < bounded; index += 1) commitMove(route[index]!);
   routeIndex = bounded;
   renderCube();
   renderTimeline();
 }
 
-async function next() {
+async function next(): Promise<boolean> {
   if (turning || routeIndex >= route.length) return false;
-  if (!await applyMove(route[routeIndex])) return false;
+  if (!await applyMove(route[routeIndex]!)) return false;
   routeIndex += 1;
   renderTimeline();
   renderCube();
   return true;
 }
 
-async function previous() {
+async function previous(): Promise<boolean> {
   if (turning || routeIndex <= 0) return false;
   routeIndex -= 1;
-  if (!await applyMove(inverse(route[routeIndex]))) {
+  if (!await applyMove(inverse(route[routeIndex]!))) {
     routeIndex += 1;
     return false;
   }
@@ -279,13 +372,13 @@ async function previous() {
   return true;
 }
 
-function stopPlayback() {
+function stopPlayback(): void {
   if (playTimer) window.clearTimeout(playTimer);
   playTimer = null;
   updatePlayButton();
 }
 
-function updatePlayButton() {
+function updatePlayButton(): void {
   if (solving) {
     setButtonContent(playButton, 'loader', 'Solving…');
     playButton.setAttribute('aria-label', 'Solving current position');
@@ -301,7 +394,7 @@ function updatePlayButton() {
   }
 }
 
-function startPlayback() {
+function startPlayback(): boolean {
   if (!route.length) return false;
   if (routeIndex === route.length) goTo(0);
   const playNext = async () => {
@@ -312,7 +405,7 @@ function startPlayback() {
       stopPlayback();
       return;
     }
-    const speed = Number(document.querySelector('#playback-speed').value);
+    const speed = Number(playbackSpeed.value);
     playTimer = window.setTimeout(playNext, Math.max(20, speed - turnDuration()));
   };
   playTimer = window.setTimeout(playNext, 0);
@@ -320,7 +413,7 @@ function startPlayback() {
   return true;
 }
 
-async function togglePlayback() {
+async function togglePlayback(): Promise<void> {
   if (solving) return;
   if (playTimer) {
     stopPlayback();
@@ -333,44 +426,45 @@ async function togglePlayback() {
   startPlayback();
 }
 
-function parseRoute(raw) {
+function parseRoute(raw: string): Move[] {
   const tokens = raw.trim().split(/[\s,]+/).filter(Boolean);
   if (!tokens.length) throw new Error('Enter at least one move.');
   return tokens.map((token) => {
     const standard = token.toUpperCase().replace('3', "'");
-    const normalized = movePermutations[standard] ? standard : notationByCode[token.toUpperCase()];
-    if (!movePermutations[normalized]) throw new Error(`“${token}” is not a valid move.`);
+    const normalized = isMove(standard) ? standard : notationByCode[token.toUpperCase()];
+    if (!normalized || !isMove(normalized)) throw new Error(`“${token}” is not a valid move.`);
     return normalized;
   });
 }
 
-function randomScramble(length = 20) {
-  const all = Object.keys(movePermutations);
-  const result = [];
+function randomScramble(length = 20): Move[] {
+  const all = Object.keys(movePermutations) as Move[];
+  const result: Move[] = [];
   let previousFace = '';
   while (result.length < length) {
     const values = new Uint32Array(1);
     crypto.getRandomValues(values);
-    const candidate = all[values[0] % all.length];
-    if (candidate[0] === previousFace) continue;
+    const candidate = all[values[0]! % all.length]!;
+    const candidateFace = candidate[0] as Face;
+    if (candidateFace === previousFace) continue;
     result.push(candidate);
-    previousFace = candidate[0];
+    previousFace = candidateFace;
   }
   return result;
 }
 
-function showMessage(text, success = false) {
+function showMessage(text: string, success = false): void {
   message.textContent = text;
   message.classList.toggle('success', success);
 }
 
-function arraysEqual(left, right) {
+function arraysEqual<T>(left: readonly T[], right: readonly T[]): boolean {
   return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
-function buildMovePad() {
-  const pad = document.querySelector('#move-pad');
-  Object.keys(movePermutations).forEach((move) => {
+function buildMovePad(): void {
+  const pad = requiredElement<HTMLDivElement>('#move-pad');
+  (Object.keys(movePermutations) as Move[]).forEach((move) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'move-button';
@@ -388,7 +482,7 @@ function buildMovePad() {
   });
 }
 
-function updateCamera() {
+function updateCamera(): void {
   cube.style.transform = `translateY(var(--cube-lift)) rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
 }
 
@@ -398,19 +492,20 @@ scene.addEventListener('pointerdown', (event) => {
   scene.setPointerCapture(event.pointerId);
 });
 scene.addEventListener('pointermove', (event) => {
-  if (!dragging) return;
+  if (!dragging || !dragOrigin) return;
   rotationY = dragOrigin.rotationY + (event.clientX - dragOrigin.x) * .45;
   rotationX = Math.max(-85, Math.min(85, dragOrigin.rotationX - (event.clientY - dragOrigin.y) * .35));
   updateCamera();
 });
 scene.addEventListener('pointerup', () => { dragging = false; });
+scene.addEventListener('pointercancel', () => { dragging = false; });
 
-document.querySelector('#reset-view').addEventListener('click', () => {
+requiredElement<HTMLButtonElement>('#reset-view').addEventListener('click', () => {
   rotationX = -14;
   rotationY = -36;
   updateCamera();
 });
-document.querySelector('#reset-position').addEventListener('click', () => {
+requiredElement<HTMLButtonElement>('#reset-position').addEventListener('click', () => {
   if (turning) return;
   stopPlayback();
   state = [...solvedState];
@@ -424,7 +519,7 @@ document.querySelector('#reset-position').addEventListener('click', () => {
   renderTimeline();
   showMessage('Position and move history reset.', true);
 });
-document.querySelector('#scramble').addEventListener('click', () => {
+requiredElement<HTMLButtonElement>('#scramble').addEventListener('click', () => {
   if (turning) return;
   state = [...solvedState];
   const scramble = randomScramble();
@@ -440,13 +535,13 @@ document.querySelector('#scramble').addEventListener('click', () => {
   showMessage('20-move position ready. Press Solve & play to run it automatically.', true);
 });
 
-function setSolvingControls(disabled) {
-  document.querySelectorAll('#move-pad button, #scramble, #open-route, #reset-position, #load-solution, #previous-move, #next-move')
+function setSolvingControls(disabled: boolean): void {
+  document.querySelectorAll<HTMLButtonElement>('#move-pad button, #scramble, #open-route, #reset-position, #load-solution, #previous-move, #next-move')
     .forEach((control) => { control.disabled = disabled; });
   playButton.disabled = disabled;
 }
 
-async function solveCurrentPosition(autoplay = false) {
+async function solveCurrentPosition(autoplay = false): Promise<boolean> {
   if (solving) return false;
   if (arraysEqual(state, solvedState)) {
     showMessage('The cube is already solved.', true);
@@ -470,8 +565,9 @@ async function solveCurrentPosition(autoplay = false) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state: capturedState, history: positionMoves }),
     });
-    const payload = await response.json();
-    if (!response.ok || !payload.success) throw new Error(payload.error || 'The solver request failed.');
+    const payload = parseSolveResponse(await response.json());
+    if (!payload.success) throw new Error(payload.error);
+    if (!response.ok) throw new Error('The solver request failed.');
     state = [...capturedState];
     route = payload.moves;
     routeKind = 'solution';
@@ -483,7 +579,7 @@ async function solveCurrentPosition(autoplay = false) {
     showMessage(`${resultKind} and native-verified in ${milliseconds} ms with ${route.length} moves.`, true);
     solved = true;
   } catch (error) {
-    showMessage(`${error.message} Start the visualizer with “uv run rubikoslav” to enable solving.`);
+    showMessage(`${errorMessage(error)} Start the visualizer with “uv run rubikoslav” to enable solving.`);
   } finally {
     solving = false;
     setSolvingControls(false);
@@ -493,13 +589,13 @@ async function solveCurrentPosition(autoplay = false) {
   return solved;
 }
 
-document.querySelector('#open-route').addEventListener('click', () => {
+requiredElement<HTMLButtonElement>('#open-route').addEventListener('click', () => {
   routeMessage.textContent = '';
   routeDialog.showModal();
   requestAnimationFrame(() => solutionInput.focus());
 });
 
-function closeRouteDialog() {
+function closeRouteDialog(): void {
   routeDialog.close();
 }
 
@@ -516,20 +612,20 @@ routeForm.addEventListener('submit', (event) => {
     showMessage(`Loaded ${route.length} move${route.length === 1 ? '' : 's'}.`, true);
     closeRouteDialog();
   } catch (error) {
-    routeMessage.textContent = error.message;
+    routeMessage.textContent = errorMessage(error);
   }
 });
-document.querySelector('#cancel-route').addEventListener('click', closeRouteDialog);
-document.querySelector('#cancel-route-top').addEventListener('click', closeRouteDialog);
-document.querySelector('#next-move').addEventListener('click', () => { void next(); });
-document.querySelector('#previous-move').addEventListener('click', () => { void previous(); });
+requiredElement<HTMLButtonElement>('#cancel-route').addEventListener('click', closeRouteDialog);
+requiredElement<HTMLButtonElement>('#cancel-route-top').addEventListener('click', closeRouteDialog);
+requiredElement<HTMLButtonElement>('#next-move').addEventListener('click', () => { void next(); });
+requiredElement<HTMLButtonElement>('#previous-move').addEventListener('click', () => { void previous(); });
 playButton.addEventListener('click', () => { void togglePlayback(); });
-document.querySelector('#playback-speed').addEventListener('change', () => {
+playbackSpeed.addEventListener('change', () => {
   if (playTimer) { stopPlayback(); startPlayback(); }
 });
 
 window.addEventListener('keydown', (event) => {
-  if (event.target.matches('select, input')) return;
+  if (event.target instanceof Element && event.target.matches('select, input')) return;
   if (event.key === 'ArrowRight') void next();
   if (event.key === 'ArrowLeft') void previous();
   if (event.key === ' ') { event.preventDefault(); void togglePlayback(); }

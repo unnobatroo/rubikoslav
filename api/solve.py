@@ -22,8 +22,11 @@ _STATIC_FILES = {
     "/index.html": _WEB_DIRECTORY / "index.html",
     "/api.html": _WEB_DIRECTORY / "api.html",
     "/styles.css": _WEB_DIRECTORY / "styles.css",
-    "/app.js": _WEB_DIRECTORY / "app.js",
-    "/generated/cube-data.js": _WEB_DIRECTORY / "generated" / "cube-data.js",
+    "/dist/app.js": _WEB_DIRECTORY / "dist" / "app.js",
+    "/dist/generated/cube-data.js": _WEB_DIRECTORY
+    / "dist"
+    / "generated"
+    / "cube-data.js",
 }
 
 
@@ -55,7 +58,7 @@ class handler(BaseHTTPRequestHandler):
         content_type = mimetypes.guess_type(asset.name)[0] or "application/octet-stream"
         cache = (
             "public, max-age=31536000, immutable"
-            if path.startswith("/generated/")
+            if path.startswith("/dist/")
             else "no-cache"
         )
         self.send_bytes(200, asset.read_bytes(), content_type, cache)

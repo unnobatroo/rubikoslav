@@ -30,13 +30,23 @@ std::string generatedModule() {
   std::ostringstream output;
   output << "// Generated from the C++ Cuboslav engine. Do not edit by "
             "hand.\n";
+  output << "export type Face = 'U' | 'L' | 'F' | 'D' | 'R' | 'B';\n";
+  output << "export type Move = `${Face}${'' | '2' | \"'\"}`;\n";
+  output << "export type Sticker = 0 | 1 | 2 | 3 | 4 | 5;\n\n";
+  output << "export interface FaceLayout {\n"
+            "  readonly name: Face;\n"
+            "  readonly center: Sticker;\n"
+            "  readonly stickers: readonly (number | null)[];\n"
+            "}\n\n";
+  output << "// Browser output is compiled to web/dist/generated/cube-data.js.\n";
   output << "export const solvedState = [";
   for (std::size_t i = 0; i < rubikoslav::detail::solvedCube.size(); ++i) {
     if (i != 0)
       output << ',';
     output << rubikoslav::detail::solvedCube[i];
   }
-  output << "];\n\nexport const faceLayouts = [\n";
+  output << "] as const satisfies readonly Sticker[];\n\n";
+  output << "export const faceLayouts = [\n";
   for (std::size_t faceIndex = 0; faceIndex < faceLayouts.size(); ++faceIndex) {
     const auto &face = faceLayouts[faceIndex];
     output << "  {\"name\":\"" << face.name << "\",\"center\":" << face.center
@@ -52,7 +62,8 @@ std::string generatedModule() {
     }
     output << "]}" << (faceIndex + 1 == faceLayouts.size() ? "\n" : ",\n");
   }
-  output << "];\n\nexport const movePermutations = {\n";
+  output << "] as const satisfies readonly FaceLayout[];\n\n";
+  output << "export const movePermutations = {\n";
 
   for (const char code : rubikoslav::detail::moves) {
     rubikoslav::Cuboslav cube;
@@ -69,7 +80,7 @@ std::string generatedModule() {
     }
     output << "]" << (code == 'R' ? "\n" : ",\n");
   }
-  output << "};\n";
+  output << "} as const satisfies Record<Move, readonly number[]>;\n";
   return output.str();
 }
 
@@ -87,7 +98,7 @@ int main(int argc, char **argv) {
   const bool check = argc == 3 && std::string(argv[1]) == "--check";
   const int pathArgument = check ? 2 : 1;
   if (argc != pathArgument + 1) {
-    std::cerr << "Usage: WebDataGeneratorovich [--check] <output.js>\n";
+    std::cerr << "Usage: WebDataGeneratorovich [--check] <output.ts>\n";
     return 2;
   }
 

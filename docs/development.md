@@ -3,6 +3,7 @@
 ## Requirements
 
 - [uv](https://docs.astral.sh/uv/)
+- Node.js 24 or newer
 - CMake 3.26 or newer
 - A C++20 compiler
 - Normal platform development tools
@@ -26,16 +27,28 @@ cmake --build build/native --parallel
 ctest --test-dir build/native --output-on-failure
 ```
 
-## Browser movement data
+## Browser TypeScript
 
-After changing native face-turn logic:
+The handwritten browser application lives in `web/src/app.ts`. TypeScript compiles it to the browser-ready `web/dist/app.js` shipped in wheels and on Vercel.
+
+Install the pinned compiler and verify both strict types and committed browser output:
+
+```bash
+npm ci
+npm run verify
+```
+
+After changing native face-turn logic, regenerate the typed cube data and compile it:
 
 ```bash
 cmake --build build/native --target generate-web-data
+npm run build
 ctest --test-dir build/native --output-on-failure
 ```
 
-`WebDataGeneratorovichIsCurrent` compares the committed browser data with fresh output from the C++ engine.
+`WebDataGeneratorovichIsCurrent` compares `web/src/generated/cube-data.ts` with fresh output from the C++ engine. `npm run verify` also fails if the compiled JavaScript under `web/dist/` is stale.
+
+The complete file map and verification boundary are documented in [Browser and TypeScript](browser-typescript.md).
 
 ## Documentation
 

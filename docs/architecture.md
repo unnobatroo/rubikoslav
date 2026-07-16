@@ -14,7 +14,8 @@ flowchart LR
     Replay --> User
 
     Native -. build time .-> Generator[WebDataGeneratorovich]
-    Generator -. move permutations .-> Browser[3D browser cube]
+    Generator -. typed move permutations .-> TypeScript[Strict TypeScript browser source]
+    TypeScript -. compile .-> Browser[3D browser cube]
 ```
 
 ## Native engine
@@ -27,9 +28,13 @@ flowchart LR
 
 ## Browser
 
-The browser does not maintain a second handwritten set of cube rules. `WebDataGeneratorovich` derives its sticker permutations from the C++ engine during the build. CTest fails if the generated JavaScript becomes stale.
+The browser application is written in strict TypeScript under `web/src/`. The browser-ready ES modules under `web/dist/` are compiled artifacts retained for Python wheels and Vercel.
+
+The browser does not maintain a second handwritten set of cube rules. `WebDataGeneratorovich` derives typed sticker permutations from the C++ engine. CTest fails if that generated TypeScript becomes stale, and the npm verification step fails if its compiled JavaScript is stale.
 
 Each animated face turn rotates the correct nine cubies, commits the generated permutation, and then starts the next turn.
+
+See [Browser and TypeScript](browser-typescript.md) for the source/runtime boundary, type contracts, and edit workflow.
 
 ## Hosted endpoint
 
