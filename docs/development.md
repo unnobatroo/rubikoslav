@@ -48,8 +48,6 @@ ctest --test-dir build/native --output-on-failure
 
 `WebDataGeneratorovichIsCurrent` compares `web/src/generated/cube-data.ts` with fresh output from the C++ engine. `npm run verify` also fails if the compiled JavaScript under `web/dist/` is stale.
 
-The complete file map and verification boundary are documented in [Browser and TypeScript](browser-typescript.md).
-
 ## Documentation
 
 ```bash

@@ -36,5 +36,3 @@ else:
 ```
 
 The first solve generates or loads the optimal search tables in the local cache. Later runs reuse them.
-
-Developers can read [how the TypeScript browser layer stays synchronized with the native cube](browser-typescript.md).

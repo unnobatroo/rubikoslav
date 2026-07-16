@@ -33,7 +33,6 @@ nav:
   - Python API: python-api.md
   - C++ API: cpp-api.md
   - Architecture: architecture.md
-  - Browser and TypeScript: browser-typescript.md
   - Development: development.md
   - Troubleshooting: troubleshooting.md
 

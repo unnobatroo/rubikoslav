@@ -1044,6 +1044,18 @@ dialog form>label {
   }
 }
 
+@media (max-width: 560px), (pointer: coarse) {
+  .cube-scene,
+  .cube-scene:active {
+    cursor: default;
+    touch-action: pan-y;
+  }
+
+  .drag-hint {
+    display: none;
+  }
+}
+
 @media (max-width: 560px) {
   main {
     padding-inline: 12px;

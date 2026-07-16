@@ -34,8 +34,6 @@ The browser does not maintain a second handwritten set of cube rules. `WebDataGe
 
 Each animated face turn rotates the correct nine cubies, commits the generated permutation, and then starts the next turn.
 
-See [Browser and TypeScript](browser-typescript.md) for the source/runtime boundary, type contracts, and edit workflow.
-
 ## Hosted endpoint
 
 The local server and Vercel function share the same payload validation and solving function. Hosted requests receive a short optimal-search budget. When a deep search times out, the server can verify, reverse, and simplify the actual button history.

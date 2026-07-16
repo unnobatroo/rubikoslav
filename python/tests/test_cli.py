@@ -110,6 +110,15 @@ class CliTests(unittest.TestCase):
         self.assertIn("type SolveResponse = SolveSuccess | SolveFailure", script)
         self.assertIn("function requiredElement<T extends Element>", script)
         self.assertIn("function parseSolveResponse(value: unknown)", script)
+        self.assertIn(
+            "window.matchMedia('(min-width: 561px) and (pointer: fine)')",
+            script,
+        )
+        self.assertNotIn("scrollIntoView", script)
+        self.assertIn("timeline.scrollTo(", script)
+        self.assertIn("@media (max-width: 560px), (pointer: coarse)", styles)
+        self.assertIn("touch-action: pan-y", styles)
+        self.assertIn(".drag-hint {\n    display: none;", styles)
 
     def test_browser_typescript_source_and_compiled_output_exist(self) -> None:
         source = ROOT / "web" / "src"

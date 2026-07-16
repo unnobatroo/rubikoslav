@@ -125,6 +125,7 @@ const routeDialog = requiredElement<HTMLDialogElement>('#route-dialog');
 const routeForm = requiredElement<HTMLFormElement>('#route-form');
 const routeMessage = requiredElement<HTMLParagraphElement>('#route-message');
 const playbackSpeed = requiredElement<HTMLSelectElement>('#playback-speed');
+const cameraDragMedia = window.matchMedia('(min-width: 561px) and (pointer: fine)');
 
 function setButtonContent(button: HTMLButtonElement, icon: string, label: string): void {
   if (button.dataset.icon === icon && button.dataset.label === label) return;
@@ -248,7 +249,18 @@ function renderTimeline(): void {
     }
     timeline.append(chip);
   });
-  timeline.querySelector('.active')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  const active = timeline.querySelector<HTMLElement>('.active');
+  if (active) {
+    const timelineBounds = timeline.getBoundingClientRect();
+    const activeBounds = active.getBoundingClientRect();
+    const centeredTop = (
+      timeline.scrollTop
+      + activeBounds.top
+      - timelineBounds.top
+      - (timeline.clientHeight - activeBounds.height) / 2
+    );
+    timeline.scrollTo({ top: Math.max(0, centeredTop), behavior: 'smooth' });
+  }
 }
 
 function commitMove(move: Move): void {
@@ -487,6 +499,7 @@ function updateCamera(): void {
 }
 
 scene.addEventListener('pointerdown', (event) => {
+  if (!cameraDragMedia.matches) return;
   dragging = true;
   dragOrigin = { x: event.clientX, y: event.clientY, rotationX, rotationY };
   scene.setPointerCapture(event.pointerId);
@@ -497,8 +510,17 @@ scene.addEventListener('pointermove', (event) => {
   rotationX = Math.max(-85, Math.min(85, dragOrigin.rotationX - (event.clientY - dragOrigin.y) * .35));
   updateCamera();
 });
-scene.addEventListener('pointerup', () => { dragging = false; });
-scene.addEventListener('pointercancel', () => { dragging = false; });
+function stopCameraDrag(event?: PointerEvent): void {
+  dragging = false;
+  dragOrigin = null;
+  if (event && scene.hasPointerCapture(event.pointerId)) {
+    scene.releasePointerCapture(event.pointerId);
+  }
+}
+
+scene.addEventListener('pointerup', stopCameraDrag);
+scene.addEventListener('pointercancel', stopCameraDrag);
+cameraDragMedia.addEventListener('change', () => stopCameraDrag());
 
 requiredElement<HTMLButtonElement>('#reset-view').addEventListener('click', () => {
   rotationX = -14;
