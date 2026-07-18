@@ -103,7 +103,9 @@ def serve_visualizer(host: str, port: int, open_browser: bool) -> int:
 
         def do_GET(self) -> None:  # noqa: N802 - inherited HTTP handler API
             if self.path == "/api/solve":
-                self.send_json(200, {"success": True, "backend": "bounded-optimal-solver"})
+                self.send_json(
+                    200, {"success": True, "backend": "bounded-optimal-solver"}
+                )
                 return
             super().do_GET()
 

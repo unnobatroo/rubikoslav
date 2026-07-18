@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 import unittest
 
+from rubikoslav import CuboslavWrapper, Rubikoslav, SOLVED_STATE, solve_payload
 from rubikoslav.cli import (
     parser,
     run_doctor,
@@ -13,6 +14,23 @@ from rubikoslav.cli import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+STYLE_MODULES = (
+    "foundation.css",
+    "cube-stage.css",
+    "app-shell.css",
+    "api-guide.css",
+    "move-controls.css",
+    "dialogs.css",
+    "responsive.css",
+)
+
+
+def visualizer_styles() -> str:
+    directory = web_directory()
+    return "\n".join(
+        (directory / "styles" / module).read_text(encoding="utf-8")
+        for module in STYLE_MODULES
+    )
 
 
 class CliTests(unittest.TestCase):
@@ -24,15 +42,45 @@ class CliTests(unittest.TestCase):
 
     def test_packaged_visualizer_exists(self) -> None:
         self.assertTrue((web_directory() / "index.html").is_file())
-        self.assertTrue((web_directory() / "dist" / "app.js").is_file())
+        for module in (
+            "app.js",
+            "backend-client.js",
+            "camera-controller.js",
+            "cube-renderer.js",
+            "dom.js",
+            "move-utils.js",
+            "timeline-view.js",
+        ):
+            self.assertTrue((web_directory() / "dist" / module).is_file(), module)
         self.assertTrue(
             (web_directory() / "dist" / "generated" / "cube-data.js").is_file()
         )
+        style_entry = (web_directory() / "styles.css").read_text(encoding="utf-8")
+        for module in STYLE_MODULES:
+            self.assertIn(f"@import url('./styles/{module}');", style_entry)
+            self.assertTrue((web_directory() / "styles" / module).is_file(), module)
 
     def test_visualizer_auto_solves_on_play_and_keeps_typed_routes(self) -> None:
         html = (web_directory() / "index.html").read_text(encoding="utf-8")
         script = (ROOT / "web" / "src" / "app.ts").read_text(encoding="utf-8")
-        styles = (web_directory() / "styles.css").read_text(encoding="utf-8")
+        backend_client = (ROOT / "web" / "src" / "backend-client.ts").read_text(
+            encoding="utf-8"
+        )
+        camera = (ROOT / "web" / "src" / "camera-controller.ts").read_text(
+            encoding="utf-8"
+        )
+        cube_renderer = (ROOT / "web" / "src" / "cube-renderer.ts").read_text(
+            encoding="utf-8"
+        )
+        dom = (ROOT / "web" / "src" / "dom.ts").read_text(encoding="utf-8")
+        move_utils = (ROOT / "web" / "src" / "move-utils.ts").read_text(
+            encoding="utf-8"
+        )
+        timeline_view = (ROOT / "web" / "src" / "timeline-view.ts").read_text(
+            encoding="utf-8"
+        )
+        visualization_source = script + camera + cube_renderer + dom + move_utils + timeline_view
+        styles = visualizer_styles()
 
         self.assertNotIn('id="state-output"', html)
         self.assertIn('src="dist/app.js"', html)
@@ -117,40 +165,72 @@ class CliTests(unittest.TestCase):
         self.assertIn("--circle-lift: -40px", styles)
         self.assertIn("--circle-lift: -34px", styles)
         self.assertIn("translateY(var(--circle-lift))", styles)
-        self.assertIn("translateY(var(--cube-lift)) rotateX", script)
+        self.assertIn("translateY(var(--cube-lift)) rotateX", camera)
         self.assertIn("let positionMoves: Move[] = []", script)
         self.assertIn("positionMoves.push(move)", script)
-        self.assertIn("history: positionMoves", script)
-        self.assertIn("fetch('/api/solve'", script)
-        self.assertIn("payload.moves.length > maxSolutionMoves", script)
+        move_handler = script[
+            script.index("button.addEventListener('click', async () => {") :
+            script.index("pad.append(button);")
+        ]
+        self.assertLess(
+            move_handler.index("await applyMove(move)"),
+            move_handler.index("positionMoves.push(move)"),
+        )
+        self.assertIn("if (solving || turning) return", script)
+        self.assertIn("requestSolution(capturedState, positionMoves)", script)
+        self.assertIn("fetch('/api/solve'", backend_client)
+        self.assertIn("JSON.stringify({ state, history })", backend_client)
+        self.assertIn("payload.moves.length > maxSolutionMoves", backend_client)
         self.assertIn("by Python and C++", script)
-        self.assertNotIn("new Worker(", script)
-        self.assertNotIn("min2phase", script)
+        self.assertNotIn("new Worker(", visualization_source + backend_client)
+        self.assertNotIn("min2phase", visualization_source + backend_client)
         self.assertIn("showMessage('Position and move history reset.'", script)
         self.assertIn("routeKind = 'solution'", script)
-        self.assertIn("isMove(standard) ? standard", script)
+        self.assertIn("isMove(standard)", move_utils)
         self.assertIn("await solveCurrentPosition(true)", script)
         self.assertIn("const capturedState = [...state]", script)
-        self.assertIn("type SolveResponse = SolveSuccess | SolveFailure", script)
-        self.assertIn("function requiredElement<T extends Element>", script)
-        self.assertIn("function parseSolveResponse(value: unknown)", script)
+        self.assertIn(
+            "type SolveResponse = SolveSuccess | SolveFailure", backend_client
+        )
+        self.assertIn("function requiredElement<T extends Element>", dom)
+        self.assertIn(
+            "function parseSolveResponse(value: unknown)", backend_client
+        )
         self.assertIn(
             "window.matchMedia('(min-width: 561px) and (pointer: fine)')",
-            script,
+            camera,
         )
-        self.assertNotIn("scrollIntoView", script)
-        self.assertIn("timeline.scrollTo(", script)
+        self.assertNotIn("scrollIntoView", timeline_view)
+        self.assertIn("this.timeline.scrollTo(", timeline_view)
         self.assertIn("@media (max-width: 560px), (pointer: coarse)", styles)
         self.assertIn("touch-action: pan-y", styles)
         self.assertIn(".drag-hint {\n    display: none;", styles)
 
     def test_browser_typescript_source_and_compiled_output_exist(self) -> None:
         source = ROOT / "web" / "src"
-        self.assertTrue((source / "app.ts").is_file())
+        for module in (
+            "app.ts",
+            "backend-client.ts",
+            "camera-controller.ts",
+            "cube-renderer.ts",
+            "dom.ts",
+            "move-utils.ts",
+            "timeline-view.ts",
+        ):
+            self.assertTrue((source / module).is_file(), module)
         generated = (source / "generated" / "cube-data.ts").read_text(encoding="utf-8")
         self.assertIn("export type Move =", generated)
         self.assertIn("satisfies Record<Move, readonly number[]>", generated)
-        self.assertTrue((ROOT / "web" / "dist" / "app.js").is_file())
+        for module in (
+            "app.js",
+            "backend-client.js",
+            "camera-controller.js",
+            "cube-renderer.js",
+            "dom.js",
+            "move-utils.js",
+            "timeline-view.js",
+        ):
+            self.assertTrue((ROOT / "web" / "dist" / module).is_file(), module)
         self.assertNotIn(
             "web/dist",
             (ROOT / ".gitignore").read_text(encoding="utf-8"),
@@ -160,7 +240,9 @@ class CliTests(unittest.TestCase):
         generated = (web_directory() / "dist" / "generated" / "cube-data.js").read_text(
             encoding="utf-8"
         )
-        script = (web_directory() / "dist" / "app.js").read_text(encoding="utf-8")
+        script = (web_directory() / "dist" / "cube-renderer.js").read_text(
+            encoding="utf-8"
+        )
 
         def exported(name: str):
             match = re.search(
@@ -297,6 +379,40 @@ class CliTests(unittest.TestCase):
         arguments = parser().parse_args(["solve", "R U R' U'"])
         self.assertEqual(arguments.command, "solve")
         self.assertEqual(arguments.scramble, "R U R' U'")
+
+    def test_screenshot_move_history_matches_browser_state_and_backend(self) -> None:
+        generated = (web_directory() / "dist" / "generated" / "cube-data.js").read_text(
+            encoding="utf-8"
+        )
+
+        def exported(name: str):
+            match = re.search(
+                rf"export const {name} = (.*?);\n", generated, flags=re.DOTALL
+            )
+            self.assertIsNotNone(match, name)
+            return json.loads(match.group(1))
+
+        history = ["U'", "L", "B", "F'", "F2"]
+        permutations = exported("movePermutations")
+        browser_state = exported("solvedState")
+        for move in history:
+            browser_state = [browser_state[source] for source in permutations[move]]
+
+        native = CuboslavWrapper()
+        for move in history:
+            native.move(move)
+        self.assertEqual(browser_state, list(native.getCube()))
+
+        status, payload = solve_payload(
+            {"state": browser_state, "history": history},
+            Rubikoslav(optimal_timeout_seconds=0),
+        )
+        self.assertEqual(status, 200, payload)
+        self.assertTrue(payload["success"], payload)
+        self.assertLessEqual(len(payload["moves"]), 20)
+        for move in payload["moves"]:
+            native.move(move)
+        self.assertEqual(tuple(native.getCube()), SOLVED_STATE)
 
     def test_doctor_needs_no_external_data(self) -> None:
         self.assertEqual(run_doctor(strict=False), 0)

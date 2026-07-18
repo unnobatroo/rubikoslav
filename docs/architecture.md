@@ -30,7 +30,9 @@ flowchart LR
 
 ## Browser
 
-The browser application is written in strict TypeScript under `web/src/`. The browser-ready ES modules under `web/dist/` are compiled artifacts retained for Python wheels and Vercel.
+The browser application is written in strict TypeScript under `web/src/`. `app.ts` coordinates UI state; focused modules own backend transport, cube rendering, camera interaction, move notation, DOM helpers, and the timeline. The browser-ready ES modules under `web/dist/` are compiled artifacts retained for Python wheels and Vercel.
+
+`web/styles.css` is only an ordered entry point. Cohesive styles live under `web/styles/`: shared foundations, cube stage, application shell, API guide, move controls, dialogs, and responsive overrides. The build check validates that every module is present and imported exactly once.
 
 TypeScript is only the visualization layer. It submits the current state and visible move history to `POST /api/solve`, validates the response shape and 20-move boundary, then animates the verified route. It does not contain or bundle a search algorithm. `WebDataGeneratorovich` derives its typed sticker permutations from the C++ engine. CTest fails if that generated TypeScript becomes stale, and npm verification fails if compiled JavaScript is stale.
 

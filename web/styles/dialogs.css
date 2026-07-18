@@ -1,0 +1,95 @@
+input {
+  width: 100%;
+  height: 48px;
+  border: 1px solid var(--line-bright);
+  border-left: 2px solid var(--blue-face);
+  background:
+    linear-gradient(135deg, rgba(40, 120, 235, .035), transparent 40%),
+    #080a0c;
+  color: var(--text);
+  padding: 14px;
+  line-height: 1.55;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.inline-actions {
+  gap: 8px;
+  margin-top: 11px;
+  flex-wrap: wrap;
+}
+
+.input-message {
+  min-height: 18px;
+  margin: 9px 0 0 !important;
+  color: #dca84e !important;
+}
+
+.input-message.success {
+  color: var(--lime) !important;
+}
+
+dialog {
+  width: min(560px, calc(100% - 28px));
+  border: 1px solid var(--line-bright);
+  border-top: 3px solid var(--lime);
+  padding: 0;
+  color: var(--text);
+  background:
+    linear-gradient(135deg, rgba(197, 255, 46, .06), transparent 38%),
+    #0d1013;
+  box-shadow: 0 34px 100px rgba(0, 0, 0, .78);
+}
+
+dialog::backdrop {
+  background: rgba(3, 5, 7, .78);
+  backdrop-filter: blur(8px);
+}
+
+dialog form {
+  padding: 28px;
+}
+
+.dialog-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.dialog-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+}
+
+.dialog-heading h2 .button-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--lime);
+}
+
+dialog form>p {
+  margin: 16px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+dialog form>label {
+  display: block;
+  margin-bottom: 8px;
+  color: #c9cdd2;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+}
+
+
+

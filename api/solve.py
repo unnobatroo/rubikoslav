@@ -17,16 +17,35 @@ from rubikoslav import Rubikoslav, solve_payload
 
 _SOLVER = Rubikoslav(optimal_timeout_seconds=2)
 _WEB_DIRECTORY = Path(__file__).resolve().parents[1] / "web"
+_STYLE_FILES = (
+    "foundation.css",
+    "cube-stage.css",
+    "app-shell.css",
+    "api-guide.css",
+    "move-controls.css",
+    "dialogs.css",
+    "responsive.css",
+)
 _STATIC_FILES = {
     "/": _WEB_DIRECTORY / "index.html",
     "/index.html": _WEB_DIRECTORY / "index.html",
     "/api.html": _WEB_DIRECTORY / "api.html",
     "/styles.css": _WEB_DIRECTORY / "styles.css",
     "/dist/app.js": _WEB_DIRECTORY / "dist" / "app.js",
+    "/dist/backend-client.js": _WEB_DIRECTORY / "dist" / "backend-client.js",
+    "/dist/camera-controller.js": _WEB_DIRECTORY / "dist" / "camera-controller.js",
+    "/dist/cube-renderer.js": _WEB_DIRECTORY / "dist" / "cube-renderer.js",
+    "/dist/dom.js": _WEB_DIRECTORY / "dist" / "dom.js",
+    "/dist/move-utils.js": _WEB_DIRECTORY / "dist" / "move-utils.js",
+    "/dist/timeline-view.js": _WEB_DIRECTORY / "dist" / "timeline-view.js",
     "/dist/generated/cube-data.js": _WEB_DIRECTORY
     / "dist"
     / "generated"
     / "cube-data.js",
+    **{
+        f"/styles/{name}": _WEB_DIRECTORY / "styles" / name
+        for name in _STYLE_FILES
+    },
 }
 
 

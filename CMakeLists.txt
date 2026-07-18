@@ -33,6 +33,9 @@ if(SKBUILD)
             "${CMAKE_SOURCE_DIR}/web/api.html"
             "${CMAKE_SOURCE_DIR}/web/styles.css"
             DESTINATION rubikoslav/web)
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/web/styles/"
+            DESTINATION rubikoslav/web/styles
+            FILES_MATCHING PATTERN "*.css")
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/web/dist/"
             DESTINATION rubikoslav/web/dist
             FILES_MATCHING PATTERN "*.js")

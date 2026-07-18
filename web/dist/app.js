@@ -1,49 +1,11 @@
 // Browser output is compiled to web/dist/app.js; edit this TypeScript source instead.
-import { faceLayouts, movePermutations, solvedState, } from './generated/cube-data.js';
-function requiredElement(selector, root = document) {
-    const element = root.querySelector(selector);
-    if (!element)
-        throw new Error(`Required element not found: ${selector}`);
-    return element;
-}
-function errorMessage(error) {
-    return error instanceof Error ? error.message : String(error);
-}
-function isMove(value) {
-    return Object.hasOwn(movePermutations, value);
-}
-const maxSolutionMoves = 20;
-function parseSolveResponse(value) {
-    if (!value || typeof value !== 'object') {
-        throw new Error('The Python solver returned an invalid response.');
-    }
-    const payload = value;
-    if (payload.success === false && typeof payload.error === 'string') {
-        return { success: false, error: payload.error };
-    }
-    if (payload.success !== true
-        || !Array.isArray(payload.moves)
-        || !payload.moves.every((move) => typeof move === 'string' && isMove(move))
-        || payload.moves.length > maxSolutionMoves
-        || typeof payload.elapsedMicroseconds !== 'number'
-        || typeof payload.optimal !== 'boolean') {
-        throw new Error('The Python solver returned an invalid response.');
-    }
-    return {
-        success: true,
-        moves: payload.moves,
-        elapsedMicroseconds: payload.elapsedMicroseconds,
-        optimal: payload.optimal,
-    };
-}
-const internalCodes = 'ABCDEFGHIJKLMNOPQR'.split('');
-const facesByCode = ['U', 'L', 'F', 'B', 'R', 'D'];
-const suffixesByCode = ['', '2', "'"];
-const notationByCode = Object.fromEntries(internalCodes.map((code, index) => {
-    const face = facesByCode[Math.floor(index / 3)];
-    const suffix = suffixesByCode[index % 3];
-    return [code, `${face}${suffix}`];
-}));
+import { solvedState, } from './generated/cube-data.js';
+import { requestSolution } from './backend-client.js';
+import { setupCamera } from './camera-controller.js';
+import { CubeRenderer } from './cube-renderer.js';
+import { arraysEqual, errorMessage, requiredElement, setButtonContent, } from './dom.js';
+import { allMoves, applyMoveToState, inverse, parseRoute, randomScramble, } from './move-utils.js';
+import { TimelineView } from './timeline-view.js';
 let state = [...solvedState];
 let routeStart = [...state];
 let route = [];
@@ -51,10 +13,6 @@ let routeIndex = 0;
 let routeKind = null;
 let positionMoves = [];
 let playTimer = null;
-let rotationX = -14;
-let rotationY = -36;
-let dragging = false;
-let dragOrigin = null;
 let solving = false;
 let turning = false;
 const cube = requiredElement('#cube');
@@ -70,211 +28,37 @@ const routeDialog = requiredElement('#route-dialog');
 const routeForm = requiredElement('#route-form');
 const routeMessage = requiredElement('#route-message');
 const playbackSpeed = requiredElement('#playback-speed');
-const cameraDragMedia = window.matchMedia('(min-width: 561px) and (pointer: fine)');
-function setButtonContent(button, icon, label) {
-    if (button.dataset.icon === icon && button.dataset.label === label)
-        return;
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.classList.add('button-icon');
-    svg.setAttribute('aria-hidden', 'true');
-    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-    use.setAttribute('href', `#icon-${icon}`);
-    svg.append(use);
-    const text = document.createElement('span');
-    text.textContent = label;
-    button.replaceChildren(svg, text);
-    button.dataset.icon = icon;
-    button.dataset.label = label;
-}
-function faceCoordinates(face, row, column) {
-    if (face === 'F')
-        return { x: column - 1, y: row - 1, z: 1 };
-    if (face === 'B')
-        return { x: 1 - column, y: row - 1, z: -1 };
-    if (face === 'R')
-        return { x: 1, y: row - 1, z: 1 - column };
-    if (face === 'L')
-        return { x: -1, y: row - 1, z: column - 1 };
-    if (face === 'U')
-        return { x: column - 1, y: -1, z: row - 1 };
-    return { x: column - 1, y: 1, z: 1 - row };
-}
-function buildCube() {
-    const visibleStickers = new Map();
-    faceLayouts.forEach((face) => {
-        face.stickers.forEach((index, position) => {
-            const row = Math.floor(position / 3);
-            const column = position % 3;
-            const coordinates = faceCoordinates(face.name, row, column);
-            const key = `${coordinates.x},${coordinates.y},${coordinates.z}`;
-            const stickers = visibleStickers.get(key) ?? {};
-            stickers[face.name] = index === null ? face.center : state[index];
-            visibleStickers.set(key, stickers);
-        });
-    });
-    const fragment = document.createDocumentFragment();
-    for (let x = -1; x <= 1; x += 1) {
-        for (let y = -1; y <= 1; y += 1) {
-            for (let z = -1; z <= 1; z += 1) {
-                if (x === 0 && y === 0 && z === 0)
-                    continue;
-                const cubie = document.createElement('div');
-                cubie.className = 'cubie';
-                cubie.dataset.x = String(x);
-                cubie.dataset.y = String(y);
-                cubie.dataset.z = String(z);
-                cubie.style.left = `${(x + 1) * 100 / 3}%`;
-                cubie.style.top = `${(y + 1) * 100 / 3}%`;
-                const depth = z < 0
-                    ? 'calc(0px - var(--cubie-size))'
-                    : z > 0 ? 'var(--cubie-size)' : '0px';
-                cubie.style.transform = `translateZ(${depth})`;
-                const stickers = visibleStickers.get(`${x},${y},${z}`) ?? {};
-                ['U', 'L', 'F', 'D', 'R', 'B'].forEach((face) => {
-                    const side = document.createElement('div');
-                    side.className = 'cubie-side';
-                    side.dataset.face = face;
-                    if (stickers[face] !== undefined) {
-                        const sticker = document.createElement('div');
-                        sticker.className = `sticker color-${stickers[face]}`;
-                        side.append(sticker);
-                    }
-                    cubie.append(side);
-                });
-                fragment.append(cubie);
-            }
-        }
-    }
-    cube.replaceChildren(fragment);
-}
+const cubeRenderer = new CubeRenderer(cube, playbackSpeed);
+const timelineView = new TimelineView(timeline, timelineLabel, timelineCount);
 function renderCube() {
-    buildCube();
+    cubeRenderer.render(state);
     counter.textContent = route.length
         ? `Move ${routeIndex} of ${route.length}`
         : arraysEqual(state, solvedState) ? 'Solved position' : 'Free turn mode';
     updatePlayButton();
 }
 function renderTimeline() {
-    timeline.replaceChildren();
-    const showingRoute = route.length > 0;
-    const moves = showingRoute ? route : positionMoves;
-    timelineLabel.textContent = showingRoute
-        ? routeKind === 'custom' ? 'Loaded route' : 'Solution'
-        : 'Your moves';
-    timelineCount.textContent = `${moves.length} move${moves.length === 1 ? '' : 's'}`;
-    timeline.classList.toggle('position-history', !showingRoute);
-    if (!moves.length) {
-        const empty = document.createElement('span');
-        empty.className = 'timeline-empty';
-        empty.textContent = 'Face turns and scrambles appear here.';
-        timeline.append(empty);
-        return;
-    }
-    moves.forEach((move, index) => {
-        const chip = document.createElement(showingRoute ? 'button' : 'span');
-        chip.className = showingRoute ? 'move-chip' : 'history-chip';
-        chip.dataset.face = move[0];
-        const number = document.createElement('span');
-        number.className = 'move-number';
-        number.textContent = String(index + 1).padStart(2, '0');
-        const notation = document.createElement('strong');
-        notation.textContent = move;
-        chip.append(number, notation);
-        if (showingRoute) {
-            chip.type = 'button';
-            if (index < routeIndex)
-                chip.classList.add('done');
-            if (index === routeIndex)
-                chip.classList.add('active');
-            chip.title = `Go to move ${index + 1}`;
-            chip.addEventListener('click', () => goTo(index));
-        }
-        timeline.append(chip);
-    });
-    const active = timeline.querySelector('.active');
-    if (active) {
-        const timelineBounds = timeline.getBoundingClientRect();
-        const activeBounds = active.getBoundingClientRect();
-        const centeredTop = (timeline.scrollTop
-            + activeBounds.top
-            - timelineBounds.top
-            - (timeline.clientHeight - activeBounds.height) / 2);
-        timeline.scrollTo({ top: Math.max(0, centeredTop), behavior: 'smooth' });
-    }
+    timelineView.render({ route, positionMoves, routeKind, routeIndex }, goTo);
 }
 function commitMove(move) {
-    const permutation = movePermutations[move];
-    if (!permutation)
-        throw new Error(`Unknown move: ${move}`);
-    state = permutation.map((source) => state[source]);
-}
-const turnGeometry = {
-    "U": { "coordinate": "y", "layer": -1, "axis": "Y", "direction": -1 },
-    "D": { "coordinate": "y", "layer": 1, "axis": "Y", "direction": 1 },
-    "L": { "coordinate": "x", "layer": -1, "axis": "X", "direction": -1 },
-    "R": { "coordinate": "x", "layer": 1, "axis": "X", "direction": 1 },
-    "F": { "coordinate": "z", "layer": 1, "axis": "Z", "direction": 1 },
-    "B": { "coordinate": "z", "layer": -1, "axis": "Z", "direction": -1 }
-};
-function turnAngle(move) {
-    const quarterTurns = move.endsWith('2') ? 2 : move.endsWith("'") ? -1 : 1;
-    return turnGeometry[move[0]].direction * quarterTurns * 90;
-}
-function turnDuration() {
-    const playbackDelay = Number(playbackSpeed.value);
-    return Math.max(140, Math.min(360, playbackDelay * .58));
-}
-function waitForTurn(layer, duration) {
-    return new Promise((resolve) => {
-        let finished = false;
-        const finish = () => {
-            if (finished)
-                return;
-            finished = true;
-            resolve();
-        };
-        layer.addEventListener('transitionend', finish, { once: true });
-        window.setTimeout(finish, duration + 80);
-    });
-}
-async function animateTurn(move) {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches)
-        return;
-    const geometry = turnGeometry[move[0]];
-    const layer = document.createElement('div');
-    layer.className = 'turn-layer';
-    const cubies = [...cube.querySelectorAll('.cubie')].filter((cubie) => Number(cubie.dataset[geometry.coordinate]) === geometry.layer);
-    cubies.forEach((cubie) => layer.append(cubie));
-    cube.append(layer);
-    const duration = turnDuration();
-    layer.style.transitionDuration = `${duration}ms`;
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-    layer.style.transform = `rotate${geometry.axis}(${turnAngle(move)}deg)`;
-    await waitForTurn(layer, duration);
+    state = applyMoveToState(state, move);
 }
 async function applyMove(move, animate = true) {
     if (turning)
         return false;
-    if (!movePermutations[move])
-        throw new Error(`Unknown move: ${move}`);
     turning = true;
-    cube.setAttribute('aria-busy', 'true');
+    cubeRenderer.setBusy(true);
     try {
         if (animate)
-            await animateTurn(move);
+            await cubeRenderer.animateTurn(move);
         commitMove(move);
         renderCube();
         return true;
     }
     finally {
         turning = false;
-        cube.removeAttribute('aria-busy');
+        cubeRenderer.setBusy(false);
     }
-}
-function inverse(move) {
-    if (move.endsWith('2'))
-        return move;
-    return (move.endsWith("'") ? move[0] : `${move}'`);
 }
 function clearRoute(clearInput = false, clearPositionHistory = false) {
     stopPlayback();
@@ -363,14 +147,14 @@ function startPlayback() {
             return;
         }
         const speed = Number(playbackSpeed.value);
-        playTimer = window.setTimeout(playNext, Math.max(20, speed - turnDuration()));
+        playTimer = window.setTimeout(playNext, Math.max(20, speed - cubeRenderer.turnDuration()));
     };
     playTimer = window.setTimeout(playNext, 0);
     updatePlayButton();
     return true;
 }
 async function togglePlayback() {
-    if (solving)
+    if (solving || turning)
         return;
     if (playTimer) {
         stopPlayback();
@@ -382,44 +166,13 @@ async function togglePlayback() {
     }
     startPlayback();
 }
-function parseRoute(raw) {
-    const tokens = raw.trim().split(/[\s,]+/).filter(Boolean);
-    if (!tokens.length)
-        throw new Error('Enter at least one move.');
-    return tokens.map((token) => {
-        const standard = token.toUpperCase().replace('3', "'");
-        const normalized = isMove(standard) ? standard : notationByCode[token.toUpperCase()];
-        if (!normalized || !isMove(normalized))
-            throw new Error(`“${token}” is not a valid move.`);
-        return normalized;
-    });
-}
-function randomScramble(length = 20) {
-    const all = Object.keys(movePermutations);
-    const result = [];
-    let previousFace = '';
-    while (result.length < length) {
-        const values = new Uint32Array(1);
-        crypto.getRandomValues(values);
-        const candidate = all[values[0] % all.length];
-        const candidateFace = candidate[0];
-        if (candidateFace === previousFace)
-            continue;
-        result.push(candidate);
-        previousFace = candidateFace;
-    }
-    return result;
-}
 function showMessage(text, success = false) {
     message.textContent = text;
     message.classList.toggle('success', success);
 }
-function arraysEqual(left, right) {
-    return left.length === right.length && left.every((value, index) => value === right[index]);
-}
 function buildMovePad() {
     const pad = requiredElement('#move-pad');
-    Object.keys(movePermutations).forEach((move) => {
+    allMoves.forEach((move) => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'move-button';
@@ -429,46 +182,15 @@ function buildMovePad() {
             if (turning)
                 return;
             clearRoute(true, route.length > 0);
+            if (!await applyMove(move))
+                return;
             positionMoves.push(move);
-            await applyMove(move);
             renderTimeline();
             showMessage('Position changed. Press Solve & play when it is ready.', true);
         });
         pad.append(button);
     });
 }
-function updateCamera() {
-    cube.style.transform = `translateY(var(--cube-lift)) rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
-}
-scene.addEventListener('pointerdown', (event) => {
-    if (!cameraDragMedia.matches)
-        return;
-    dragging = true;
-    dragOrigin = { x: event.clientX, y: event.clientY, rotationX, rotationY };
-    scene.setPointerCapture(event.pointerId);
-});
-scene.addEventListener('pointermove', (event) => {
-    if (!dragging || !dragOrigin)
-        return;
-    rotationY = dragOrigin.rotationY + (event.clientX - dragOrigin.x) * .45;
-    rotationX = Math.max(-85, Math.min(85, dragOrigin.rotationX - (event.clientY - dragOrigin.y) * .35));
-    updateCamera();
-});
-function stopCameraDrag(event) {
-    dragging = false;
-    dragOrigin = null;
-    if (event && scene.hasPointerCapture(event.pointerId)) {
-        scene.releasePointerCapture(event.pointerId);
-    }
-}
-scene.addEventListener('pointerup', stopCameraDrag);
-scene.addEventListener('pointercancel', stopCameraDrag);
-cameraDragMedia.addEventListener('change', () => stopCameraDrag());
-requiredElement('#reset-view').addEventListener('click', () => {
-    rotationX = -14;
-    rotationY = -36;
-    updateCamera();
-});
 requiredElement('#reset-position').addEventListener('click', () => {
     if (turning)
         return;
@@ -524,16 +246,7 @@ async function solveCurrentPosition(autoplay = false) {
     renderCube();
     showMessage('The Python engine is searching for a C++-verified route within 20 moves.');
     try {
-        const response = await fetch('/api/solve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ state: capturedState, history: positionMoves }),
-        });
-        const payload = parseSolveResponse(await response.json());
-        if (!payload.success)
-            throw new Error(payload.error);
-        if (!response.ok)
-            throw new Error('The Python solver request failed.');
+        const payload = await requestSolution(capturedState, positionMoves);
         state = [...capturedState];
         route = payload.moves;
         routeKind = 'solution';
@@ -546,7 +259,7 @@ async function solveCurrentPosition(autoplay = false) {
         solved = true;
     }
     catch (error) {
-        showMessage(`${errorMessage(error)} Start the visualizer with “uv run rubikoslav” to enable the Python engine.`);
+        showMessage(errorMessage(error));
     }
     finally {
         solving = false;
@@ -605,6 +318,7 @@ window.addEventListener('keydown', (event) => {
         void togglePlayback();
     }
 });
+setupCamera(scene, cube, requiredElement('#reset-view'));
 buildMovePad();
 renderCube();
 renderTimeline();

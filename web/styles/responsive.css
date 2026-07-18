@@ -1,0 +1,153 @@
+@container (max-width: 370px) {
+  .playback {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+  }
+
+  .playback .play {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 12px;
+  }
+
+  .speed-control {
+    grid-column: 1 / -1;
+    justify-self: end;
+    margin-left: 0;
+  }
+
+  .control-footer {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .creator-link {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 1050px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1.35fr) minmax(340px, .85fr);
+  }
+
+  .move-pad {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .control-footer {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .creator-link {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --cube-size: min(57vw, 300px);
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .stage-panel {
+    grid-template-rows: auto minmax(420px, 1fr);
+  }
+
+  .control-panel {
+    box-shadow: 0 -24px 70px rgba(0, 0, 0, .2);
+  }
+
+  .cube-scene {
+    --circle-lift: -34px;
+    min-height: 420px;
+  }
+
+  .cube {
+    --cube-lift: -42px;
+  }
+
+  .move-pad {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+@media (max-width: 560px), (pointer: coarse) {
+  .cube-scene,
+  .cube-scene:active {
+    cursor: default;
+    touch-action: pan-y;
+  }
+
+  .drag-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  main {
+    min-height: 100vh;
+  }
+
+  .stage-panel {
+    padding-inline: 14px;
+  }
+
+  .control-section {
+    padding: 28px 20px;
+  }
+
+  .resource-links {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+  }
+
+  .section-actions {
+    max-width: 176px;
+  }
+
+  .section-actions .secondary-button {
+    min-height: 36px;
+    padding-inline: 10px;
+  }
+
+  .move-pad {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .cube-scene::before {
+    width: min(98vw, 480px);
+  }
+
+  .speed-control {
+    display: none;
+  }
+
+  .playback .play {
+    flex: 1;
+  }
+
+  .inline-actions>button {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
