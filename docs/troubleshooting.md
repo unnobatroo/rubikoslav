@@ -33,7 +33,7 @@ rubikoslav --port 4174
 
 ## The cube moves but solving fails on a static server
 
-`python3 -m http.server` can serve the visual files, but it does not provide `POST /api/solve`. Start the complete local application with `rubikoslav` or `uv run rubikoslav`.
+TypeScript only visualizes the cube; solving requires the Python/C++ endpoint. `python3 -m http.server` does not provide `POST /api/solve`. Start the complete local application with `rubikoslav` or `uv run rubikoslav`.
 
 ## TypeScript changes do not appear in the browser
 

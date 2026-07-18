@@ -2,7 +2,7 @@
 
 Rubikoslav is a reusable 3×3 Rubik's Cube solver with a Python API, a C++20 cube engine, a command-line interface, and a strict TypeScript browser visualizer.
 
-Every returned route is replayed through the native engine before it is accepted.
+Every returned route is at most 20 moves in the half-turn metric and is replayed through the cube engine before it is accepted.
 
 <div class="rubikoslav-actions" markdown="1">
 

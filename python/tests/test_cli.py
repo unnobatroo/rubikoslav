@@ -61,12 +61,24 @@ class CliTests(unittest.TestCase):
         self.assertGreater(html.index('id="timeline"'), html.index('id="move-pad"'))
         self.assertGreater(html.index('class="playback"'), html.index('id="timeline"'))
         self.assertIn('class="control-footer"', html)
-        self.assertGreater(html.index('class="control-footer"'), html.index('class="playback"'))
+        self.assertGreater(
+            html.index('class="control-footer"'), html.index('class="playback"')
+        )
         self.assertIn('class="creator-link"', html)
-        self.assertIn("margin-top: auto", styles)
-        playback_styles = styles[
-            styles.index(".playback {") : styles.index(".play {")
+        self.assertIn('class="brand-lockup"', html)
+        self.assertIn('class="brand-mark"', html)
+        self.assertIn("Rubikoslav</span>", html)
+        stage_toolbar = html[
+            html.index('class="stage-toolbar"') : html.index('id="cube-scene"')
         ]
+        self.assertIn('class="stage-status"', stage_toolbar)
+        self.assertIn('class="brand-lockup"', stage_toolbar)
+        self.assertLess(
+            stage_toolbar.index('class="brand-lockup"'),
+            stage_toolbar.index('id="move-counter"'),
+        )
+        self.assertIn("margin-top: auto", styles)
+        playback_styles = styles[styles.index(".playback {") : styles.index(".play {")]
         self.assertNotIn("border-top", playback_styles)
         self.assertIn('id="timeline-label"', html)
         self.assertIn('id="timeline-count"', html)
@@ -84,7 +96,17 @@ class CliTests(unittest.TestCase):
         self.assertIn('id="icon-play"', html)
         self.assertIn("setButtonContent(playButton, 'pause', 'Pause')", script)
         self.assertIn("bottom: 22px", styles)
-        self.assertIn("width: min(54vw, 560px)", styles)
+        self.assertIn(".cube-scene::before", styles)
+        circle_styles = styles[
+            styles.index(".cube-scene::before {") : styles.index(".cube-scene:active")
+        ]
+        self.assertNotIn("border:", circle_styles)
+        self.assertIn("width: min(54vw, 560px)", circle_styles)
+        self.assertNotIn(".workspace::before", styles)
+        self.assertNotIn(
+            "border: 1px solid var(--line-bright);\n  background: var(--panel)", styles
+        )
+        self.assertIn("min-height: 100vh", styles)
         self.assertIn("grid-template-rows: auto minmax(456px, 1fr)", styles)
         self.assertIn("container-type: inline-size", styles)
         self.assertIn("@container (max-width: 370px)", styles)
@@ -99,9 +121,11 @@ class CliTests(unittest.TestCase):
         self.assertIn("let positionMoves: Move[] = []", script)
         self.assertIn("positionMoves.push(move)", script)
         self.assertIn("history: positionMoves", script)
-        self.assertIn(
-            "payload.optimal ? 'Shortest route proven' : 'Fast route'", script
-        )
+        self.assertIn("fetch('/api/solve'", script)
+        self.assertIn("payload.moves.length > maxSolutionMoves", script)
+        self.assertIn("by Python and C++", script)
+        self.assertNotIn("new Worker(", script)
+        self.assertNotIn("min2phase", script)
         self.assertIn("showMessage('Position and move history reset.'", script)
         self.assertIn("routeKind = 'solution'", script)
         self.assertIn("isMove(standard) ? standard", script)
@@ -123,9 +147,7 @@ class CliTests(unittest.TestCase):
     def test_browser_typescript_source_and_compiled_output_exist(self) -> None:
         source = ROOT / "web" / "src"
         self.assertTrue((source / "app.ts").is_file())
-        generated = (source / "generated" / "cube-data.ts").read_text(
-            encoding="utf-8"
-        )
+        generated = (source / "generated" / "cube-data.ts").read_text(encoding="utf-8")
         self.assertIn("export type Move =", generated)
         self.assertIn("satisfies Record<Move, readonly number[]>", generated)
         self.assertTrue((ROOT / "web" / "dist" / "app.js").is_file())
@@ -135,9 +157,9 @@ class CliTests(unittest.TestCase):
         )
 
     def test_browser_face_layout_uses_physical_rows_and_columns(self) -> None:
-        generated = (
-            web_directory() / "dist" / "generated" / "cube-data.js"
-        ).read_text(encoding="utf-8")
+        generated = (web_directory() / "dist" / "generated" / "cube-data.js").read_text(
+            encoding="utf-8"
+        )
         script = (web_directory() / "dist" / "app.js").read_text(encoding="utf-8")
 
         def exported(name: str):

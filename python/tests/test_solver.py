@@ -5,6 +5,7 @@ import unittest
 from cube_solver import Cube
 
 from rubikoslav import (
+    MAX_SOLUTION_MOVES,
     Rubikoslav,
     CuboslavWrapper,
     SOLVED_STATE,
@@ -43,6 +44,7 @@ class SolverTests(unittest.TestCase):
         result = Rubikoslav().solve(cube.getCube())
         self.assertTrue(result.success, result.error)
         self.assertGreater(len(result.moves), 0)
+        self.assertLessEqual(len(result.moves), MAX_SOLUTION_MOVES)
 
         for move in result.moves:
             cube.move(move)
@@ -94,7 +96,7 @@ class SolverTests(unittest.TestCase):
             verify_route(state, result.moves)
         self.assertEqual(result.backend, "optimal-ida-star")
 
-    def test_deep_web_positions_fall_back_to_verified_history(self) -> None:
+    def test_web_fallback_never_exceeds_twenty_moves(self) -> None:
         faces = "ULFBRD"
         suffixes = ("", "2", "'")
         history = [
@@ -110,11 +112,29 @@ class SolverTests(unittest.TestCase):
             Rubikoslav(optimal_timeout_seconds=0),
         )
 
+        self.assertEqual(status, 422)
+        self.assertFalse(payload["success"])
+        self.assertEqual(payload["moves"], [])
+        self.assertIn("within 20 moves", payload["error"])
+
+    def test_twenty_move_history_is_an_accepted_bounded_fallback(self) -> None:
+        history = [
+            "R", "U", "F2", "L'", "D", "B2", "R2", "U'", "F", "D2",
+            "L", "B'", "U2", "R'", "F'", "L2", "D'", "B", "R2", "U",
+        ]
+        cube = CuboslavWrapper()
+        for move in history:
+            cube.move(move)
+
+        status, payload = solve_payload(
+            {"state": cube.getCube(), "history": history},
+            Rubikoslav(optimal_timeout_seconds=0),
+        )
+
         self.assertEqual(status, 200)
         self.assertTrue(payload["success"])
-        self.assertFalse(payload["optimal"])
         self.assertEqual(payload["backend"], "verified-history-route")
-        self.assertLessEqual(len(payload["moves"]), len(history))
+        self.assertLessEqual(len(payload["moves"]), MAX_SOLUTION_MOVES)
         verify_route(cube.getCube(), payload["moves"])
 
     def test_history_simplification_is_state_preserving(self) -> None:
@@ -157,8 +177,8 @@ class SolverTests(unittest.TestCase):
         self.assertTrue(payload["optimal"])
 
     def test_web_payload_rejects_excessive_optional_depth(self) -> None:
-        with self.assertRaisesRegex(ValueError, "between 0 and 30"):
-            solve_payload({"state": list(SOLVED_STATE), "maxDepth": 31})
+        with self.assertRaisesRegex(ValueError, "between 0 and 20"):
+            solve_payload({"state": list(SOLVED_STATE), "maxDepth": 21})
 
 
 if __name__ == "__main__":

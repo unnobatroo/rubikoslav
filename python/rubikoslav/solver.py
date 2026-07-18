@@ -15,6 +15,7 @@ from cube_solver import Korf
 from .CuboslavWrapper import CuboslavWrapper
 
 SOLVED_STATE = (0,) * 8 + (1,) * 8 + (2,) * 8 + (5,) * 8 + (4,) * 8 + (3,) * 8
+MAX_SOLUTION_MOVES = 20
 
 _FACELET_INDICES: dict[str, tuple[int | None, ...]] = {
     "U": (0, 1, 2, 3, None, 4, 5, 6, 7),
@@ -132,7 +133,7 @@ def verified_history_route(state: Sequence[int], history: Sequence[str]) -> list
 
 
 class Rubikoslav:
-    """Public solver with optimal search and a verified history fallback."""
+    """Public solver that accepts only verified routes within 20 HTM moves."""
 
     def __init__(self, optimal_timeout_seconds: int | None = None) -> None:
         self.optimal_timeout_seconds = optimal_timeout_seconds
@@ -179,6 +180,11 @@ class Rubikoslav:
         try:
             if max_depth is not None and max_depth < 0:
                 raise ValueError("max_depth must be zero or greater")
+            if max_depth is not None and max_depth > MAX_SOLUTION_MOVES:
+                raise ValueError(
+                    f"max_depth cannot exceed {MAX_SOLUTION_MOVES} moves in half-turn metric"
+                )
+            search_limit = MAX_SOLUTION_MOVES if max_depth is None else max_depth
 
             values = [int(value) for value in state]
             optimal_repr = state_to_optimal_repr(values)
@@ -201,25 +207,27 @@ class Rubikoslav:
                     raise RuntimeError("Optimal solver did not initialize")
                 solution = solver.solve(
                     cube,
-                    max_length=max_depth,
+                    max_length=search_limit,
                     timeout=self.optimal_timeout_seconds,
                 )
             if solution is None:
-                if history_route is not None and (
-                    max_depth is None or len(history_route) <= max_depth
-                ):
+                if history_route is not None and len(history_route) <= search_limit:
                     result.moves = history_route
                     result.backend = "verified-history-route"
                     result.success = True
                     result.search_depth = len(result.moves)
                     return result
-                if max_depth is None:
+                if self.optimal_timeout_seconds is not None:
                     raise RuntimeError(
-                        "Optimal search timed out before finding a route"
+                        f"Search timed out before finding a route within {search_limit} moves"
                     )
-                raise RuntimeError(f"No solution was found within {max_depth} moves")
+                raise RuntimeError(f"No solution was found within {search_limit} moves")
 
             result.moves = str(solution).split() if solution else []
+            if len(result.moves) > search_limit:
+                raise RuntimeError(
+                    f"The solver exceeded the {search_limit}-move acceptance limit"
+                )
             verify_route(values, result.moves)
             result.success = True
             result.optimal = True
@@ -265,8 +273,10 @@ def solve_payload(
         raise ValueError("Solve request must include a state array")
     requested_depth = payload.get("maxDepth")
     max_depth = None if requested_depth is None else int(requested_depth)
-    if max_depth is not None and not 0 <= max_depth <= 30:
-        raise ValueError("maxDepth must be between 0 and 30 when provided")
+    if max_depth is not None and not 0 <= max_depth <= MAX_SOLUTION_MOVES:
+        raise ValueError(
+            f"maxDepth must be between 0 and {MAX_SOLUTION_MOVES} when provided"
+        )
 
     history = payload.get("history")
     if history is not None and (

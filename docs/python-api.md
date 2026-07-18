@@ -24,7 +24,7 @@ result = solver.solve_scramble(["R", "U", "F2"])
 | Field | Meaning |
 | --- | --- |
 | `success` | Whether a verified route was found |
-| `moves` | Standard notation such as `F2 U' R'` |
+| `moves` | At most 20 half-turn-metric moves, such as `F2 U' R'` |
 | `error` | Failure explanation, otherwise empty |
 | `search_depth` | Number of moves in the result |
 | `elapsed_microseconds` | Total solve time |
@@ -64,6 +64,8 @@ state = cube.getCube()
 
 Most applications should prefer `solve_scramble()` and let the package own this state.
 
-## Web time budget
+## The 20-move boundary
 
-Direct Python calls search without a time limit by default. The hosted web endpoint uses a short optimal-search budget; for deep positions it can return a simplified inverse of the verified movement history instead of leaving a request running indefinitely.
+Direct Python calls search without a time limit by default and reject `max_depth` values above 20. The HTTP endpoint has a short optimal-search budget. It may return a verified inverse of the supplied movement history only when that route is also 20 moves or fewer; otherwise it reports that the bounded search timed out.
+
+The visualizer calls the same HTTP endpoint. TypeScript only submits the state and animates the result; Python searches for the route, and C++ validates the state and replays the answer before it is returned.

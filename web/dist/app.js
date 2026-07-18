@@ -12,9 +12,10 @@ function errorMessage(error) {
 function isMove(value) {
     return Object.hasOwn(movePermutations, value);
 }
+const maxSolutionMoves = 20;
 function parseSolveResponse(value) {
     if (!value || typeof value !== 'object') {
-        throw new Error('The solver returned an invalid response.');
+        throw new Error('The Python solver returned an invalid response.');
     }
     const payload = value;
     if (payload.success === false && typeof payload.error === 'string') {
@@ -23,9 +24,10 @@ function parseSolveResponse(value) {
     if (payload.success !== true
         || !Array.isArray(payload.moves)
         || !payload.moves.every((move) => typeof move === 'string' && isMove(move))
+        || payload.moves.length > maxSolutionMoves
         || typeof payload.elapsedMicroseconds !== 'number'
         || typeof payload.optimal !== 'boolean') {
-        throw new Error('The solver returned an invalid response.');
+        throw new Error('The Python solver returned an invalid response.');
     }
     return {
         success: true,
@@ -520,7 +522,7 @@ async function solveCurrentPosition(autoplay = false) {
     setSolvingControls(true);
     renderTimeline();
     renderCube();
-    showMessage('Searching for the shortest route. Deep positions switch to a fast verified route automatically.');
+    showMessage('The Python engine is searching for a C++-verified route within 20 moves.');
     try {
         const response = await fetch('/api/solve', {
             method: 'POST',
@@ -531,7 +533,7 @@ async function solveCurrentPosition(autoplay = false) {
         if (!payload.success)
             throw new Error(payload.error);
         if (!response.ok)
-            throw new Error('The solver request failed.');
+            throw new Error('The Python solver request failed.');
         state = [...capturedState];
         route = payload.moves;
         routeKind = 'solution';
@@ -539,12 +541,12 @@ async function solveCurrentPosition(autoplay = false) {
         routeIndex = 0;
         renderTimeline();
         const milliseconds = Math.round(payload.elapsedMicroseconds / 1000);
-        const resultKind = payload.optimal ? 'Shortest route proven' : 'Fast route';
-        showMessage(`${resultKind} and native-verified in ${milliseconds} ms with ${route.length} moves.`, true);
+        const resultKind = payload.optimal ? 'Shortest route proven' : 'Verified route';
+        showMessage(`${resultKind} by Python and C++ in ${milliseconds} ms with ${route.length} of 20 moves.`, true);
         solved = true;
     }
     catch (error) {
-        showMessage(`${errorMessage(error)} Start the visualizer with “uv run rubikoslav” to enable solving.`);
+        showMessage(`${errorMessage(error)} Start the visualizer with “uv run rubikoslav” to enable the Python engine.`);
     }
     finally {
         solving = false;

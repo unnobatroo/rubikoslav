@@ -48,7 +48,7 @@ else:
         <h2>What happens during a solve</h2>
         <ol>
           <li><code>solve_scramble()</code> builds the position with the native C++ cube.</li>
-          <li>Python translates that state and searches for a route.</li>
+          <li>Python translates that state and searches for a route of at most 20 half-turn-metric moves.</li>
           <li>The route is replayed through the C++ cube. A route that does not finish solved is rejected.</li>
           <li>The result reports the moves, elapsed time, backend, and whether the shortest route was proven.</li>
         </ol>
@@ -92,8 +92,9 @@ request = Request(
 with urlopen(request) as response:
     print(json.load(response))</code></pre>
         <p>
-          <code>state</code> is required. <code>history</code> is optional, but lets the two-second web solver return a
-          fast, C++-verified route when proving the shortest deep solution would take too long.
+          <code>state</code> is required. <code>history</code> is optional. When the two-second Python search times out,
+          a reversed history is accepted only if it is C++-verified and no longer than 20 moves. The TypeScript
+          visualizer calls this endpoint; it does not contain a separate solver.
         </p>
       </section>
     </div>

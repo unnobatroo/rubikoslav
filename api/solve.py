@@ -49,7 +49,7 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802 - Vercel handler API
         path = urlsplit(self.path).path
         if path == "/api/solve":
-            self.send_json(200, {"success": True, "backend": "adaptive-solver"})
+            self.send_json(200, {"success": True, "backend": "bounded-optimal-solver"})
             return
         asset = _STATIC_FILES.get(path)
         if asset is None or not asset.is_file():

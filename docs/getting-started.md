@@ -58,6 +58,8 @@ Rubikoslav uses standard face letters: `U`, `D`, `L`, `R`, `F`, and `B`.
 - `R2` means a half turn.
 - `R'` means the reverse quarter turn.
 
+Each notation token counts as one move in the half-turn metric, including `R2`. Rubikoslav never accepts a solution longer than 20 such moves.
+
 ## Check the installation
 
 ```bash

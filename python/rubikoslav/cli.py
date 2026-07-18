@@ -103,7 +103,7 @@ def serve_visualizer(host: str, port: int, open_browser: bool) -> int:
 
         def do_GET(self) -> None:  # noqa: N802 - inherited HTTP handler API
             if self.path == "/api/solve":
-                self.send_json(200, {"success": True, "backend": "adaptive-solver"})
+                self.send_json(200, {"success": True, "backend": "bounded-optimal-solver"})
                 return
             super().do_GET()
 
@@ -197,7 +197,7 @@ def parser() -> argparse.ArgumentParser:
         "--max-depth",
         type=int,
         default=None,
-        help="optional maximum solution length (default: search until solved)",
+        help="optional solution limit from 0 to 20 HTM moves (default: 20)",
     )
     result.add_argument(
         "--verbose",

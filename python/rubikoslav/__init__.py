@@ -2,6 +2,7 @@
 
 from .CuboslavWrapper import CuboslavWrapper
 from .solver import (
+    MAX_SOLUTION_MOVES,
     SOLVED_STATE,
     Rubikoslav,
     SolveResult,
@@ -15,6 +16,7 @@ from .solver import (
 
 __all__ = [
     "CuboslavWrapper",
+    "MAX_SOLUTION_MOVES",
     "Rubikoslav",
     "SOLVED_STATE",
     "SolveResult",
