@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "rubikoslav"
-version = "0.4.1"
+version = "1.0.0"
 description = "Verified 3x3 Rubik's Cube solver with visualisation."
 authors = [{name = "Jaloliddin Ismailov"}]
 readme = "README.md"
@@ -14,7 +14,7 @@ license-files = ["LICENSE"]
 dependencies = ["cube-solver==1.1.4", "typing-extensions==4.15.0"]
 keywords = ["rubiks-cube", "solver", "cpp", "pybind11", "visualisation"]
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
   "Intended Audience :: Developers",
   "Programming Language :: C++",
