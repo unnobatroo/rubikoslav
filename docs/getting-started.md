@@ -2,7 +2,7 @@
 
 ## Install the package
 
-Use a virtual environment in real projects:
+For a project, start with a virtual environment:
 
 === "pip"
 
@@ -19,7 +19,7 @@ Use a virtual environment in real projects:
     uv add rubikoslav
     ```
 
-Published wheels include the compiled native extension, so normal installs on supported platforms do not need CMake or a C++ compiler.
+Published wheels already include the native extension. On a supported platform, a normal install does not need CMake or a C++ compiler.
 
 ## Open the visualizer
 
@@ -27,7 +27,7 @@ Published wheels include the compiled native extension, so normal installs on su
 rubikoslav
 ```
 
-The command starts the local solver and opens the visual cube. To keep the browser closed:
+This starts the local solver and opens the cube in your browser. To start the server without opening a tab:
 
 ```bash
 rubikoslav --no-open
@@ -52,13 +52,13 @@ rubikoslav solve "R U R' U'"
 
 ## Move notation
 
-Rubikoslav uses standard face letters: `U`, `D`, `L`, `R`, `F`, and `B`.
+Moves use the standard face letters: `U`, `D`, `L`, `R`, `F`, and `B`.
 
 - `R` means one quarter turn.
 - `R2` means a half turn.
 - `R'` means the reverse quarter turn.
 
-Each notation token counts as one move in the half-turn metric, including `R2`. Rubikoslav never accepts a solution longer than 20 such moves.
+Each token counts as one move in the half-turn metric, including `R2`. Rubikoslav will not accept a solution longer than 20 moves.
 
 ## Check the installation
 
@@ -66,11 +66,11 @@ Each notation token counts as one move in the half-turn metric, including `R2`. 
 rubikoslav doctor --strict
 ```
 
-The strict check loads the native module, finds the packaged web files, performs a real solve, and replays the answer through C++.
+The strict check loads the native module, finds the packaged web files, runs a real solve, and asks C++ to replay the answer.
 
 ## First-solve cache
 
-Optimal search uses generated transition and pruning tables. Rubikoslav stores them under the operating system's normal cache location. Override it when needed:
+The optimal search relies on generated transition and pruning tables. Rubikoslav keeps them in your operating system's normal cache location. To put them somewhere else:
 
 ```bash
 export RUBIKOSLAV_CACHE_DIR=/absolute/path/to/cache

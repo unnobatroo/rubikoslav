@@ -1,8 +1,8 @@
 # Rubikoslav
 
-Rubikoslav is a reusable 3×3 Rubik's Cube solver with a Python API, a C++20 cube engine, a command-line interface, and a strict TypeScript browser visualizer.
+Rubikoslav solves 3×3 Rubik's Cubes from Python, the command line, or an interactive browser visualizer. A C++20 engine sits underneath each interface.
 
-Every returned route is at most 20 moves in the half-turn metric and is replayed through the cube engine before it is accepted.
+Every route is limited to 20 moves in the half-turn metric. Before Rubikoslav returns it, the cube engine replays the moves and checks that they really solve the position.
 
 <div class="rubikoslav-actions" markdown="1">
 
@@ -16,7 +16,7 @@ Every returned route is at most 20 moves in the half-turn metric and is replayed
 
 ## Install
 
-Install the published package from PyPI:
+Install it from PyPI:
 
 ```bash
 pip install rubikoslav
@@ -35,4 +35,4 @@ else:
     raise RuntimeError(result.error)
 ```
 
-The first solve generates or loads the optimal search tables in the local cache. Later runs reuse them.
+The first solve prepares the search tables in your local cache. Later solves reuse them.

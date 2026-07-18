@@ -1,6 +1,6 @@
 # Architecture
 
-Rubikoslav keeps one physical cube model at the center of every interface.
+Every Rubikoslav interface works from the same physical cube model.
 
 ```mermaid
 flowchart LR
@@ -22,22 +22,22 @@ flowchart LR
 
 ## Native engine
 
-`rubikoslav::Cuboslav` owns the 48 movable stickers and implements all 18 face turns. It checks color counts, piece identity, orientation invariants, and permutation reachability before accepting an external state.
+`rubikoslav::Cuboslav` owns the 48 movable stickers and all 18 face turns. Before accepting an external state, it checks color counts, piece identity, orientation invariants, and whether the permutation is reachable.
 
 ## Python solver
 
-`Rubikoslav` translates the native state into the color net expected by the search dependency. The solver uses increasing cost bounds and admissible pruning tables, with 20 as the hard maximum in the half-turn metric. A route is returned only after the C++ engine replays it to the solved state.
+`Rubikoslav` translates the native state into the color net used by the search dependency. The solver raises its cost bound gradually and uses admissible pruning tables, with a hard limit of 20 moves in the half-turn metric. It only returns a route after the C++ engine replays it to the solved state.
 
 ## Browser
 
-The browser application is written in strict TypeScript under `web/src/`. `app.ts` coordinates UI state; focused modules own backend transport, cube rendering, camera interaction, move notation, DOM helpers, and the timeline. The browser-ready ES modules under `web/dist/` are compiled artifacts retained for Python wheels and Vercel.
+The browser app is strict TypeScript under `web/src/`. `app.ts` coordinates the interface, while focused modules handle backend calls, cube rendering, camera movement, notation, DOM helpers, and the move timeline. The browser-ready modules in `web/dist/` are compiled artifacts kept for Python wheels and Vercel.
 
-`web/styles.css` is only an ordered entry point. Cohesive styles live under `web/styles/`: shared foundations, cube stage, application shell, API guide, move controls, dialogs, and responsive overrides. The build check validates that every module is present and imported exactly once.
+`web/styles.css` is just the ordered entry point. The actual styles live under `web/styles/`, grouped into foundations, cube stage, app shell, API guide, move controls, dialogs, and responsive overrides. The build check makes sure every module exists and is imported exactly once.
 
-TypeScript is only the visualization layer. It submits the current state and visible move history to `POST /api/solve`, validates the response shape and 20-move boundary, then animates the verified route. It does not contain or bundle a search algorithm. `WebDataGeneratorovich` derives its typed sticker permutations from the C++ engine. CTest fails if that generated TypeScript becomes stale, and npm verification fails if compiled JavaScript is stale.
+TypeScript only handles the visualization. It sends the current state and visible move history to `POST /api/solve`, checks the response shape and 20-move limit, then animates the verified route. There is no search algorithm in the browser bundle. `WebDataGeneratorovich` derives the typed sticker permutations from the C++ engine. CTest catches stale generated TypeScript, and npm verification catches stale compiled JavaScript.
 
-Each animated face turn rotates the correct nine cubies, commits the generated permutation, and then starts the next turn.
+For each animated move, the browser rotates the correct nine cubies, commits the generated permutation, and only then starts the next turn.
 
 ## Hosted endpoint
 
-The local server and Vercel function share the same payload validation and Python solving function. The visualizer always uses this endpoint. Hosted requests receive a short optimal-search budget. When a deep search times out, Python can ask C++ to verify the submitted movement history, reverse and simplify it, and accept that fallback only when it is no longer than 20 moves.
+The local server and Vercel function share the same payload validation and Python solve function, and the visualizer always goes through that endpoint. Hosted requests get a short optimal-search budget. If a deep search times out, Python can ask C++ to verify the submitted move history, reverse and simplify it, and use that fallback only when it is no longer than 20 moves.

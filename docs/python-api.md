@@ -2,7 +2,7 @@
 
 ## Solve normal notation
 
-`solve_scramble()` is the normal entry point for another application:
+For most applications, start with `solve_scramble()`:
 
 ```python
 from rubikoslav import Rubikoslav
@@ -19,7 +19,7 @@ result = solver.solve_scramble(["R", "U", "F2"])
 
 ## Read the result
 
-`SolveResult` uses the same shape for success and failure:
+`SolveResult` has the same fields whether the solve succeeds or fails:
 
 | Field | Meaning |
 | --- | --- |
@@ -41,17 +41,17 @@ print(f"Solved in {result.elapsed_microseconds / 1_000:.1f} ms")
 
 ## Solve an existing state
 
-Use `solve()` when an integration already tracks Rubikoslav's 48 movable stickers:
+Use `solve()` if your application already tracks Rubikoslav's 48 movable stickers:
 
 ```python
 result = solver.solve(state)
 ```
 
-The state must contain 48 integers from `0` through `5`, with eight stickers of each color. Native validation rejects impossible color counts, mirrored pieces, twists, flips, and unreachable permutations.
+The state needs 48 integers from `0` through `5`, with eight stickers of each color. Native validation rejects impossible color counts, mirrored pieces, twists, flips, and unreachable permutations.
 
 ## Manipulate the native cube
 
-`CuboslavWrapper` exposes the small pybind11 bridge:
+`CuboslavWrapper` is the small pybind11 bridge to the native cube:
 
 ```python
 from rubikoslav import CuboslavWrapper
@@ -62,10 +62,10 @@ cube.move("U2")
 state = cube.getCube()
 ```
 
-Most applications should prefer `solve_scramble()` and let the package own this state.
+Most applications can stick with `solve_scramble()` and let Rubikoslav manage the state.
 
 ## The 20-move boundary
 
-Direct Python calls search without a time limit by default and reject `max_depth` values above 20. The HTTP endpoint has a short optimal-search budget. It may return a verified inverse of the supplied movement history only when that route is also 20 moves or fewer; otherwise it reports that the bounded search timed out.
+Direct Python calls have no time limit by default, but they reject `max_depth` values above 20. The HTTP endpoint gives the optimal search a short time budget. If that search times out, it may use a verified inverse of the supplied move history—but only when that route is also 20 moves or fewer.
 
-The visualizer calls the same HTTP endpoint. TypeScript only submits the state and animates the result; Python searches for the route, and C++ validates the state and replays the answer before it is returned.
+The visualizer uses that same HTTP endpoint. TypeScript sends the state and animates the result. Python finds the route, while C++ validates the state and replays the answer before anything comes back.

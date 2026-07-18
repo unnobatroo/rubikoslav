@@ -29,16 +29,16 @@ ctest --test-dir build/native --output-on-failure
 
 ## Browser TypeScript
 
-The handwritten browser application lives in `web/src/app.ts`. TypeScript compiles it to the browser-ready `web/dist/app.js` shipped in wheels and on Vercel.
+The handwritten browser code lives under `web/src/`. TypeScript compiles it into the browser-ready modules in `web/dist/` that ship in wheels and on Vercel.
 
-Install the pinned compiler and verify both strict types and committed browser output:
+Install the pinned compiler, then check both the strict types and the committed browser output:
 
 ```bash
 npm ci
 npm run verify
 ```
 
-After changing native face-turn logic, regenerate the typed cube data and compile it:
+After changing native face-turn logic, regenerate the typed cube data before compiling the browser files:
 
 ```bash
 cmake --build build/native --target generate-web-data
@@ -46,7 +46,7 @@ npm run build
 ctest --test-dir build/native --output-on-failure
 ```
 
-`WebDataGeneratorovichIsCurrent` compares `web/src/generated/cube-data.ts` with fresh output from the C++ engine. `npm run verify` also fails if the compiled JavaScript under `web/dist/` is stale.
+`WebDataGeneratorovichIsCurrent` compares `web/src/generated/cube-data.ts` with fresh output from the C++ engine. `npm run verify` separately catches stale JavaScript under `web/dist/`.
 
 ## Documentation
 
@@ -55,7 +55,7 @@ uv sync --locked --only-group docs --no-install-project
 uv run --no-sync mkdocs serve
 ```
 
-Open <http://127.0.0.1:8000>. A strict production build uses:
+Open <http://127.0.0.1:8000>. For the same strict build used in production:
 
 ```bash
 uv run --no-sync mkdocs build --strict
@@ -63,7 +63,7 @@ uv run --no-sync mkdocs build --strict
 
 ## Production deployment
 
-Pushes to `main` run the test suite and deploy the application through `.github/workflows/deploy.yml`. The repository needs the `VERCEL_TOKEN` Actions secret.
+Pushes to `main` run the tests and deploy through `.github/workflows/deploy.yml`. The repository needs a `VERCEL_TOKEN` Actions secret.
 
 For a manual deployment:
 
@@ -71,6 +71,6 @@ For a manual deployment:
 vercel --prod
 ```
 
-Vercel stores generated search tables under `/tmp` for each warm function instance. A cold instance initializes them again.
+Vercel keeps generated search tables under `/tmp` for each warm function instance. A cold instance has to initialize them again.
 
-Documentation changes run `.github/workflows/docs.yml` and publish `docs/` to GitHub Pages.
+Documentation changes go through `.github/workflows/docs.yml`, which publishes `docs/` to GitHub Pages.
