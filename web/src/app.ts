@@ -203,7 +203,7 @@ function buildMovePad(): void {
       if (!await applyMove(move)) return;
       positionMoves.push(move);
       renderTimeline();
-      showMessage('Position changed. Press Solve & play when it is ready.', true);
+      showMessage('Position changed', true);
     });
     pad.append(button);
   });
