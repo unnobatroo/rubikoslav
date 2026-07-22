@@ -1,6 +1,8 @@
 # C++ API
 
-The native library lives under the `rubikoslav` namespace. In CMake, the exported target is `Rubikoslav::Core`.
+Most users should install the Python package. The native C++20 library is available for applications that need the cube model without Python.
+
+The public namespace is `rubikoslav`, and the exported CMake target is `Rubikoslav::Core`.
 
 ## Build and install
 
@@ -12,7 +14,7 @@ cmake --build build/native --config Release
 cmake --install build/native --prefix /your/install/prefix
 ```
 
-## Link from CMake
+## Consume from CMake
 
 ```cmake
 find_package(Rubikoslav CONFIG REQUIRED)
@@ -22,9 +24,9 @@ target_link_libraries(my_cube_app PRIVATE Rubikoslav::Core)
 target_compile_features(my_cube_app PRIVATE cxx_std_20)
 ```
 
-If the install prefix is outside the normal system search path, add it to `CMAKE_PREFIX_PATH`.
+Add a non-standard install prefix to `CMAKE_PREFIX_PATH` when configuring the consuming project.
 
-## Use the engine
+## Apply moves
 
 ```cpp
 #include <Rubikoslav/Cuboslav.hpp>
@@ -34,17 +36,15 @@ If the install prefix is outside the normal system search path, add it to `CMAKE
 int main() {
   rubikoslav::Cuboslav cube;
   cube.turn(rubikoslav::Move::fromNotation("R"));
-  cube.turn(rubikoslav::Move::fromNotation("U"));
+  cube.turn(rubikoslav::Move::fromNotation("U2"));
 
-  std::cout << (cube.solved() ? "solved" : "scrambled") << '\n';
+  std::cout << (cube.solved() ? "solved" : "not solved") << '\n';
 }
 ```
 
-Public types such as `Cuboslav`, `Move`, `Hash`, `CubeValidationResult`, and `Stopwatch` stay under `rubikoslav`, which keeps them from colliding with names from another library.
+Public types include `Cuboslav`, `Move`, `Hash`, `CubeValidationResult`, and `Stopwatch`.
 
 !!! warning "Internal namespace"
-    `rubikoslav::detail` contains lookup tables and generated move constants for the engine and build tools. Those names are internal and may change, so application code should not depend on them.
+    `rubikoslav::detail` contains generated move constants and engine implementation details. It is not a compatibility surface.
 
-## C++ package managers
-
-C++ does not have one universal equivalent of PyPI; Conan and vcpkg are the closest options. For now, Rubikoslav ships as a standard installable CMake package. A Conan or vcpkg recipe can be added when native users need one.
+Rubikoslav currently ships a standard installable CMake package, not Conan or vcpkg recipes.

@@ -1,43 +1,62 @@
 # Architecture
 
-Every Rubikoslav interface works from the same physical cube model.
+The Python package exposes one cube model and three bounded ways to produce a route.
 
 ```mermaid
 flowchart LR
-    BrowserUser[Browser user] --> TypeScript[TypeScript visualizer]
-    TypeScript -->|state and history| Python[Python API]
-    CodeUser[CLI or Python project] --> Python
-    Python --> Native[C++20 Cuboslav]
-    Native --> Validation[Physical-state validation]
-    Validation --> Adapter[48 stickers to solver net]
-    Adapter --> Search[IDA* search, maximum 20 HTM]
-    Tables[(Generated pruning tables)] --> Search
-    Search --> Replay[Native route replay]
-    Replay --> Python
-    Python -->|verified route| TypeScript
+    Caller[Python caller] --> Input{Input}
+    Input -->|scramble or history| History[Verify and simplify inverse]
+    Input -->|arbitrary 48-sticker state| Optimal[Optimal IDA star]
+    Optimal -->|configured timeout| Fallback[Local two-phase fallback]
+    History --> Gate[20 HTM acceptance gate]
+    Optimal --> Gate
+    Fallback --> Gate
+    Gate --> Replay[Native C++ replay]
+    Replay --> Result[SolveResult]
 
-    Native -. build time .-> Generator[WebDataGeneratorovich]
-    Generator -. typed move permutations .-> TypeScript
+    Cache[(On-device pruning cache)] --> Optimal
+    Browser[TypeScript visualizer] -->|state and history| Caller
 ```
 
-## Native engine
+## Python layer
 
-`rubikoslav::Cuboslav` owns the 48 movable stickers and all 18 face turns. Before accepting an external state, it checks color counts, piece identity, orientation invariants, and whether the permutation is reachable.
+`python/rubikoslav/solver.py` owns request validation, backend selection, the 20-move acceptance boundary, timing, and `SolveResult`. The public package exports these high-level pieces from `rubikoslav.__init__`.
 
-## Python solver
+### Known-history path
 
-`Rubikoslav` translates the native state into the color net used by the search dependency. The solver raises its cost bound gradually and uses admissible pruning tables, with a hard limit of 20 moves in the half-turn metric. It only returns a route after the C++ engine replays it to the solved state.
+When a caller supplies `history`, Rubikoslav native-replays it to prove that it creates the submitted state. It reverses and simplifies the history and accepts it only when it fits the requested depth. This is the usual `solve_scramble()` path.
 
-## Browser
+### Optimal path
 
-The browser app is strict TypeScript under `web/src/`. `app.ts` coordinates the interface, while focused modules handle backend calls, cube rendering, camera movement, notation, DOM helpers, and the move timeline. The browser-ready modules in `web/dist/` are compiled artifacts kept for Python wheels and Vercel.
+An arbitrary state with no history is translated into the search library's representation. The Korf IDA* backend loads or generates local transition and pruning tables, then searches up to 20 HTM moves.
 
-`web/styles.css` is just the ordered entry point. The actual styles live under `web/styles/`, grouped into foundations, cube stage, app shell, move controls, dialogs, and responsive overrides. The build check makes sure every module exists and is imported exactly once.
+### Bounded fallback
 
-TypeScript only handles the visualization. It sends the current state and visible move history to `POST /api/solve`, checks the response shape and 20-move limit, then animates the verified route. There is no search algorithm in the browser bundle. `WebDataGeneratorovich` derives the typed sticker permutations from the C++ engine. CTest catches stale generated TypeScript, and npm verification catches stale compiled JavaScript.
+When `optimal_timeout_seconds` is configured, an optimal timeout can fall back to the process-local two-phase solver. Long verified histories in the web path use the same fallback directly. Every answer remains subject to the same 20-move gate and native replay.
 
-For each animated move, the browser rotates the correct nine cubies, commits the generated permutation, and only then starts the next turn.
+## Native layer
 
-## Hosted endpoint
+`rubikoslav::Cuboslav` owns the 48 movable stickers and the 18 standard face turns. `CuboslavWrapper` is the pybind11 bridge used by Python.
 
-The local server and Vercel function share the same payload validation and Python solve function, and the visualizer always goes through that endpoint. A verified inverse history returns immediately when it is 20 moves or fewer. Longer histories go straight to a local two-phase search with the same 20-move cap. C++ replays every returned route.
+Before accepting an external state, the native model validates:
+
+- eight stickers of each color;
+- valid corner and edge identities;
+- corner orientation and edge-flip invariants;
+- reachable permutation parity.
+
+After a Python backend proposes a route, the same native model applies every move and checks that the final state equals `SOLVED_STATE`.
+
+## Browser layer
+
+The browser is a visualization client written in strict TypeScript. It owns controls, rendering, camera movement, timeline state, and animation. It does not contain a search algorithm.
+
+The committed modules under `web/dist/` are compiled from `web/src/` and ship in wheels and on Vercel. C++ generates the typed sticker permutations used by the renderer, so browser turns and native turns share one source of truth.
+
+The local CLI server and Vercel handler both expose `POST /api/solve` for the visualizer. That route is an internal transport for the app; Python consumers should call the package API directly.
+
+## Process model
+
+Optimal tables and backend instances are process-global. Initialization is guarded, and searches are serialized with a lock. Disk cache survives process restarts when its directory is persistent; in-memory backend state does not.
+
+No solve path sends cube data to a third-party solver service.

@@ -28,13 +28,19 @@ theme:
     - search.highlight
 
 nav:
-  - Overview: index.md
-  - Getting started: getting-started.md
-  - Python API: python-api.md
-  - C++ API: cpp-api.md
-  - Architecture: architecture.md
-  - Development: development.md
-  - Troubleshooting: troubleshooting.md
+  - Start here:
+      - Overview: index.md
+      - Installation and quickstart: getting-started.md
+  - Python:
+      - API reference: python-api.md
+      - CLI and visualizer: cli.md
+      - Production usage: production.md
+  - Internals:
+      - Architecture: architecture.md
+      - C++ API: cpp-api.md
+  - Project:
+      - Development: development.md
+      - Troubleshooting: troubleshooting.md
 
 markdown_extensions:
   - admonition

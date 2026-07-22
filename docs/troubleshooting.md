@@ -1,54 +1,106 @@
 # Troubleshooting
 
-## The first solve is slow
+## `pip install` starts compiling C++
 
-The solver is generating or loading its transition and pruning tables. Later runs reuse the local cache.
-
-Move the cache when needed:
+Your interpreter or platform does not match a published wheel. Confirm that before installing:
 
 ```bash
-export RUBIKOSLAV_CACHE_DIR=/absolute/path/to/cache
-rubikoslav doctor --strict
+python -m pip install --only-binary=:all: rubikoslav
 ```
 
-It is safe to delete the cache; the next solve will simply generate the tables again.
+Current wheels cover CPython 3.10-3.14 on Linux x86-64 with glibc, macOS arm64, and Windows amd64. Alpine/musl, macOS Intel, 32-bit Python, and other architectures require a source build unless a future release adds wheels.
 
-## The C++ extension does not compile
+For a source build, install CMake, a C++20 compiler, Python development headers, and your platform's normal build toolchain.
 
-Install your platform's normal compiler tools, then rebuild the package:
+## The native module fails to import
+
+Check that the active interpreter is the one where the package was installed:
 
 ```bash
-uv sync --reinstall-package rubikoslav
+python -c "import sys, rubikoslav; print(sys.executable); print(rubikoslav.__version__)"
+rubikoslav doctor
 ```
 
-On supported platforms, the official PyPI wheels avoid this compiler step during a normal install.
+If a virtual environment moved between machines or Python versions, recreate it instead of reusing the compiled extension.
+
+## `solve_scramble()` is fast but `optimal` is false
+
+That is expected. `solve_scramble()` knows the move history and normally returns a native-verified, simplified inverse route. It does not spend time proving that route is shortest.
+
+To request optimal search for the resulting position, pass only the state:
+
+```python
+cube = CuboslavWrapper()
+for move in ("R", "U", "F2"):
+    cube.move(move)
+
+result = Rubikoslav().solve(cube.getCube())
+```
+
+## The first arbitrary-state solve is slow
+
+The optimal backend is generating or loading transition and pruning tables. Warm it during startup:
+
+```python
+Rubikoslav.initialize()
+```
+
+Set a persistent writable cache location in containers:
+
+```bash
+export RUBIKOSLAV_CACHE_DIR=/var/cache/rubikoslav
+```
+
+Deleting the cache is safe; the next optimal solve regenerates it.
+
+## A solve returns `success=False`
+
+Inspect the structured result:
+
+```python
+result = solver.solve_scramble(scramble)
+if not result.success:
+    print(result.error)
+```
+
+Common causes include invalid notation, an impossible raw state, a `max_depth` that is too small, or a timeout that found no bounded fallback. Do not ignore `success` and assume `moves` is usable.
+
+## Requests do not run in parallel
+
+Searches in one process are serialized intentionally because the backends share process-global state. Threads keep callers safe, but they do not provide parallel search throughput.
+
+Use multiple worker processes for parallelism. In async code, `asyncio.to_thread()` prevents event-loop blocking but does not remove backend serialization.
+
+## Cache creation fails in a container
+
+Point `RUBIKOSLAV_CACHE_DIR` at a writable directory. A read-only home directory works only for paths that never initialize arbitrary-state optimal search.
 
 ## Port 4173 is busy
-
-Choose another port:
 
 ```bash
 rubikoslav --port 4174
 ```
 
-## The cube moves but solving fails on a static server
+## The visualizer renders but cannot solve
 
-TypeScript only draws the cube. Solving still needs the Python/C++ endpoint, and `python3 -m http.server` does not provide `POST /api/solve`. Start the full local app with `rubikoslav` or `uv run rubikoslav` instead.
+A static file server can draw the cube but does not implement `POST /api/solve`. Run the packaged app:
 
-## TypeScript changes do not appear in the browser
+```bash
+rubikoslav --no-open
+```
 
-The app serves compiled files from `web/dist/`, not the TypeScript under `web/src/`. Rebuild and verify the browser output:
+## Browser changes do not appear
+
+The app serves `web/dist/`, not `web/src/`:
 
 ```bash
 npm run build
 npm run verify
 ```
 
-If `npm run verify` reports stale browser JavaScript, compile it again and commit the updated files under `web/dist/` with the TypeScript change.
+Commit the generated `web/dist/*.js` files with their TypeScript sources.
 
 ## Generated cube data is stale
-
-If CTest says `web/src/generated/cube-data.ts` is stale, rebuild the native generator and regenerate the data before compiling TypeScript:
 
 ```bash
 cmake --build build/native --target generate-web-data
@@ -56,12 +108,14 @@ npm run build
 ctest --test-dir build/native --output-on-failure
 ```
 
-## Run the full health check
+## Run the complete local check
 
 ```bash
 npm ci
 npm run verify
 uv sync --locked
-uv run rubikoslav doctor --strict
 uv run python -m unittest discover -s python/tests -v
+uv run rubikoslav doctor --strict
+uv run --only-group docs mkdocs build --strict
+uv build
 ```

@@ -1,71 +1,201 @@
 # Python API
 
-## Solve normal notation
+The recommended public surface is `Rubikoslav`, `SolveResult`, and `CuboslavWrapper`.
 
-For most applications, start with `solve_scramble()`:
+```python
+from rubikoslav import CuboslavWrapper, Rubikoslav, SolveResult
+```
+
+!!! note "Typing"
+    The Python source uses type annotations, but the distribution does not currently declare itself as a PEP 561 typed package. Strict type checkers may treat imports as untyped unless your project supplies local stubs.
+
+## `Rubikoslav`
+
+```python
+Rubikoslav(optimal_timeout_seconds: int | None = None)
+```
+
+`optimal_timeout_seconds=None` means arbitrary-state optimal search has no timeout. Set a timeout when bounded response time matters; if optimal search times out, Rubikoslav tries the local two-phase backend and still rejects routes above 20 moves.
+
+### `solve_scramble()`
+
+```python
+solve_scramble(
+    scramble: str | Sequence[str],
+    max_depth: int | None = None,
+) -> SolveResult
+```
+
+Use this when you have standard move notation:
+
+```python
+solver = Rubikoslav()
+result = solver.solve_scramble("R U F2", max_depth=10)
+```
+
+The method builds the state with the native cube and passes the move history to the solver. If the verified, simplified inverse route is within `max_depth`, it returns without running optimal search.
+
+`max_depth` defaults to 20 and must be between 0 and 20 inclusive. A smaller value is an acceptance limit, not a hint: if no route is found within it, `success` is false.
+
+### `solve()`
+
+```python
+solve(
+    state: Sequence[int],
+    max_depth: int | None = None,
+    history: Sequence[str] | None = None,
+) -> SolveResult
+```
+
+Use this when your application already has the native 48-sticker state:
+
+```python
+cube = CuboslavWrapper()
+cube.move("R")
+cube.move("U")
+
+state = cube.getCube()
+result = Rubikoslav().solve(state)
+```
+
+With no `history`, the default backend is optimal IDA*. With a matching history, the solver can return its verified inverse or use the bounded fallback when a timeout is configured.
+
+Do not invent the 48 integers manually unless you also implement Rubikoslav's sticker ordering. Prefer `CuboslavWrapper.getCube()` or persist a state previously returned by that method. Native validation rejects malformed and physically impossible states.
+
+### `initialize()`
+
+```python
+Rubikoslav.initialize(verbose: bool = False) -> None
+```
+
+Generate or load the process-global optimal-search tables before the first arbitrary-state request:
 
 ```python
 from rubikoslav import Rubikoslav
 
+Rubikoslav.initialize()
 solver = Rubikoslav()
-result = solver.solve_scramble("R U F2")
 ```
 
-It also accepts a sequence:
+You do not need to call this for short `solve_scramble()` requests that can return a verified history route.
+
+### `solve_codes()`
 
 ```python
-result = solver.solve_scramble(["R", "U", "F2"])
+solve_codes(state: Sequence[int]) -> list[str]
 ```
 
-## Read the result
+This compatibility method returns the engine's compact one-character move codes and raises `RuntimeError` on failure. New Python applications should normally use `solve()` and standard notation from `result.moves`.
 
-`SolveResult` has the same fields whether the solve succeeds or fails:
+## `SolveResult`
 
-| Field | Meaning |
+Every solve attempt returns the same dataclass:
+
+```python
+@dataclass(slots=True)
+class SolveResult:
+    success: bool
+    moves: list[str]
+    error: str
+    search_depth: int
+    elapsed_microseconds: int
+    backend: str
+    optimal: bool
+```
+
+| Field | Contract |
 | --- | --- |
-| `success` | Whether a verified route was found |
-| `moves` | At most 20 half-turn-metric moves, such as `F2 U' R'` |
-| `error` | Failure explanation, otherwise empty |
-| `search_depth` | Number of moves in the result |
-| `elapsed_microseconds` | Total solve time |
-| `backend` | Solver path that produced the route |
-| `optimal` | Whether the shortest route was proven |
+| `success` | `True` only after native route replay reaches the solved state. |
+| `moves` | Standard notation, never more than 20 HTM moves. Empty on failure or for an already solved state. |
+| `error` | Human-readable failure detail; empty on success. |
+| `search_depth` | Number of moves accepted from the selected backend. |
+| `elapsed_microseconds` | End-to-end time spent inside the solve call. |
+| `backend` | `verified-history-route`, `optimal-ida-star`, or `two-phase-fallback`. |
+| `optimal` | Whether the shortest route was proven, not merely whether the solve succeeded. |
 
 ```python
+result = Rubikoslav().solve_scramble("R U F2")
 if not result.success:
     raise RuntimeError(result.error)
 
-print(" ".join(result.moves))
-print(f"Solved in {result.elapsed_microseconds / 1_000:.1f} ms")
+print({
+    "moves": result.moves,
+    "backend": result.backend,
+    "optimal": result.optimal,
+    "elapsed_ms": result.elapsed_microseconds / 1_000,
+})
 ```
 
-## Solve an existing state
-
-Use `solve()` if your application already tracks Rubikoslav's 48 movable stickers:
+For JSON-friendly serialization:
 
 ```python
-result = solver.solve(state)
+from dataclasses import asdict
+
+payload = asdict(result)
 ```
 
-The state needs 48 integers from `0` through `5`, with eight stickers of each color. Native validation rejects impossible color counts, mirrored pieces, twists, flips, and unreachable permutations.
+## Backend semantics
 
-## Manipulate the native cube
+### `verified-history-route`
 
-`CuboslavWrapper` is the small pybind11 bridge to the native cube:
+The submitted history is replayed to confirm it produces the state. Rubikoslav reverses and safely simplifies it, then native-replays the answer. This is normally the fastest path and does not claim optimality.
+
+### `optimal-ida-star`
+
+The solver receives an arbitrary state, initializes or loads its pruning tables, and searches with a maximum depth of 20 HTM. `optimal=True` means it proved the shortest accepted route.
+
+### `two-phase-fallback`
+
+Used when a configured optimal timeout expires or a long verified history needs a bounded route. It is local to the Python process, remains capped at 20 moves, and does not claim optimality.
+
+## `CuboslavWrapper`
+
+`CuboslavWrapper` is the pybind11 bridge to the native cube model:
 
 ```python
-from rubikoslav import CuboslavWrapper
-
 cube = CuboslavWrapper()
 cube.move("R")
 cube.move("U2")
+
 state = cube.getCube()
+cube.set_cube(state)
 ```
 
-Most applications can stick with `solve_scramble()` and let Rubikoslav manage the state.
+| Method | Purpose |
+| --- | --- |
+| `move(notation)` | Apply `U D L R F B` with optional `2` or `'`. |
+| `getCube()` | Return the current 48-sticker state. |
+| `set_cube(state)` | Validate and load a 48-sticker state. |
+| `move_code(code)` | Apply one compact engine move code. |
 
-## The 20-move boundary
+The camel-case `getCube()` name is retained by the native binding for compatibility.
 
-Direct Python calls have no time limit by default, but they reject `max_depth` values above 20. The HTTP endpoint returns a verified inverse history immediately when it fits that limit. Longer histories use a bounded local two-phase search instead. Neither route may exceed 20 moves.
+## Verification helpers
 
-The visualizer uses that same HTTP endpoint. TypeScript sends the state and animates the result. Python finds the route, while C++ validates the state and replays the answer before anything comes back.
+Advanced integrations can import:
+
+```python
+from rubikoslav import SOLVED_STATE, state_to_facelets, verify_route
+```
+
+- `verify_route(state, moves)` native-replays a proposed route and raises `RuntimeError` if it does not solve the state.
+- `state_to_facelets(state)` validates a native state and returns a standard 54-character `URFDLB` facelet string.
+- `SOLVED_STATE` is the native solved-state tuple.
+- `MAX_SOLUTION_MOVES` is `20`.
+
+These helpers raise on invalid input. The high-level `solve()` and `solve_scramble()` methods instead report expected failures through `SolveResult`.
+
+## Synchronous and process-wide behavior
+
+Solving is synchronous. The optimal and fallback backends share process-global initialization state and serialize searches with a lock. Reusing a solver instance avoids needless application-level setup, but it does not make searches concurrent.
+
+In an async application, move the call off the event-loop thread:
+
+```python
+import asyncio
+
+solver = Rubikoslav(optimal_timeout_seconds=2)
+result = await asyncio.to_thread(solver.solve_scramble, "R U F2")
+```
+
+This keeps the event loop responsive; it does not bypass in-process search serialization. Use multiple worker processes when actual parallel solve throughput is required.
