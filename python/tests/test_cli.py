@@ -18,7 +18,6 @@ STYLE_MODULES = (
     "foundation.css",
     "cube-stage.css",
     "app-shell.css",
-    "api-guide.css",
     "move-controls.css",
     "dialogs.css",
     "responsive.css",

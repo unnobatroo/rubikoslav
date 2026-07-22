@@ -21,7 +21,6 @@ _STYLE_FILES = (
     "foundation.css",
     "cube-stage.css",
     "app-shell.css",
-    "api-guide.css",
     "move-controls.css",
     "dialogs.css",
     "responsive.css",
@@ -29,7 +28,6 @@ _STYLE_FILES = (
 _STATIC_FILES = {
     "/": _WEB_DIRECTORY / "index.html",
     "/index.html": _WEB_DIRECTORY / "index.html",
-    "/api.html": _WEB_DIRECTORY / "api.html",
     "/styles.css": _WEB_DIRECTORY / "styles.css",
     "/dist/app.js": _WEB_DIRECTORY / "dist" / "app.js",
     "/dist/backend-client.js": _WEB_DIRECTORY / "dist" / "backend-client.js",

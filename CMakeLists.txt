@@ -30,7 +30,6 @@ endif()
 if(SKBUILD)
     install(FILES
             "${CMAKE_SOURCE_DIR}/web/index.html"
-            "${CMAKE_SOURCE_DIR}/web/api.html"
             "${CMAKE_SOURCE_DIR}/web/styles.css"
             DESTINATION rubikoslav/web)
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/web/styles/"

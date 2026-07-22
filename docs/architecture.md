@@ -32,7 +32,7 @@ flowchart LR
 
 The browser app is strict TypeScript under `web/src/`. `app.ts` coordinates the interface, while focused modules handle backend calls, cube rendering, camera movement, notation, DOM helpers, and the move timeline. The browser-ready modules in `web/dist/` are compiled artifacts kept for Python wheels and Vercel.
 
-`web/styles.css` is just the ordered entry point. The actual styles live under `web/styles/`, grouped into foundations, cube stage, app shell, API guide, move controls, dialogs, and responsive overrides. The build check makes sure every module exists and is imported exactly once.
+`web/styles.css` is just the ordered entry point. The actual styles live under `web/styles/`, grouped into foundations, cube stage, app shell, move controls, dialogs, and responsive overrides. The build check makes sure every module exists and is imported exactly once.
 
 TypeScript only handles the visualization. It sends the current state and visible move history to `POST /api/solve`, checks the response shape and 20-move limit, then animates the verified route. There is no search algorithm in the browser bundle. `WebDataGeneratorovich` derives the typed sticker permutations from the C++ engine. CTest catches stale generated TypeScript, and npm verification catches stale compiled JavaScript.
 
