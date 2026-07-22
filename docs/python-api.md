@@ -66,6 +66,6 @@ Most applications can stick with `solve_scramble()` and let Rubikoslav manage th
 
 ## The 20-move boundary
 
-Direct Python calls have no time limit by default, but they reject `max_depth` values above 20. The HTTP endpoint gives the optimal search a short time budget. If that search times out, it may use a verified inverse of the supplied move history—but only when that route is also 20 moves or fewer.
+Direct Python calls have no time limit by default, but they reject `max_depth` values above 20. The HTTP endpoint returns a verified inverse history immediately when it fits that limit. Longer histories use a bounded local two-phase search instead. Neither route may exceed 20 moves.
 
 The visualizer uses that same HTTP endpoint. TypeScript sends the state and animates the result. Python finds the route, while C++ validates the state and replays the answer before anything comes back.

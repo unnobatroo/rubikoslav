@@ -96,12 +96,11 @@ class SolverTests(unittest.TestCase):
             verify_route(state, result.moves)
         self.assertEqual(result.backend, "optimal-ida-star")
 
-    def test_web_fallback_never_exceeds_twenty_moves(self) -> None:
-        faces = "ULFBRD"
-        suffixes = ("", "2", "'")
+    def test_web_fallback_solves_the_reported_twenty_nine_move_position(self) -> None:
         history = [
-            faces[index % len(faces)] + suffixes[(index * 2) % len(suffixes)]
-            for index in range(26)
+            "F2", "D", "B", "F2", "L'", "B2", "F'", "F", "U", "B",
+            "D", "R2", "F2", "B2", "L2", "L", "L'", "B'", "D'", "D2",
+            "F2", "B2", "U2", "R2", "R", "L2", "U2", "F2", "D2",
         ]
         cube = CuboslavWrapper()
         for move in history:
@@ -112,10 +111,11 @@ class SolverTests(unittest.TestCase):
             Rubikoslav(optimal_timeout_seconds=0),
         )
 
-        self.assertEqual(status, 422)
-        self.assertFalse(payload["success"])
-        self.assertEqual(payload["moves"], [])
-        self.assertIn("within 20 moves", payload["error"])
+        self.assertEqual(status, 200, payload)
+        self.assertTrue(payload["success"], payload)
+        self.assertEqual(payload["backend"], "two-phase-fallback")
+        self.assertLessEqual(len(payload["moves"]), MAX_SOLUTION_MOVES)
+        verify_route(cube.getCube(), payload["moves"])
 
     def test_twenty_move_history_is_an_accepted_bounded_fallback(self) -> None:
         history = [

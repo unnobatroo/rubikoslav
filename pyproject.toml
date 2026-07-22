@@ -11,7 +11,11 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "GPL-3.0"
 license-files = ["LICENSE"]
-dependencies = ["cube-solver==1.1.4", "typing-extensions==4.15.0"]
+dependencies = [
+  "cube-solver==1.1.4",
+  "rubik-solver-py==0.1.1",
+  "typing-extensions==4.15.0",
+]
 keywords = ["rubiks-cube", "solver", "cpp", "pybind11", "visualisation"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",

@@ -244,7 +244,7 @@ async function solveCurrentPosition(autoplay = false) {
     setSolvingControls(true);
     renderTimeline();
     renderCube();
-    showMessage('The Python engine is searching for a C++-verified route within 20 moves.');
+    showMessage('Solving...');
     try {
         const payload = await requestSolution(capturedState, positionMoves);
         state = [...capturedState];
@@ -253,9 +253,8 @@ async function solveCurrentPosition(autoplay = false) {
         routeStart = [...capturedState];
         routeIndex = 0;
         renderTimeline();
-        const milliseconds = Math.round(payload.elapsedMicroseconds / 1000);
-        const resultKind = payload.optimal ? 'Shortest route proven' : 'Verified route';
-        showMessage(`${resultKind} by Python and C++ in ${milliseconds} ms with ${route.length} of 20 moves.`, true);
+        const moveLabel = route.length === 1 ? 'move' : 'moves';
+        showMessage(`Success! Solved in ${route.length} ${moveLabel}`, true);
         solved = true;
     }
     catch (error) {

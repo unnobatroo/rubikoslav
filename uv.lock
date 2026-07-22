@@ -803,11 +803,26 @@ wheels = [
 ]
 
 [[package]]
+name = "rubik-solver-py"
+version = "0.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
+    { name = "numpy", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f0/68/48deb6786e8c92e927f7108716c163bc63582a5ca3e8a57b413517b2ba01/rubik_solver_py-0.1.1.tar.gz", hash = "sha256:c604a3b7455095aa3bb5a6f76162f28f2c626713794fa0f43b544f02b6acebe7", size = 15724, upload-time = "2026-02-22T04:11:24.297Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c4/45/107563e3a2d2dee6405e059a7568b76dfde92ecbb64a7fb14f16f7b0b943/rubik_solver_py-0.1.1-py3-none-any.whl", hash = "sha256:461ac3c3fdf2aca63f70c3b00c36ec155f3c414d2a6cab5c0ae7b0d2cdecb1cc", size = 17475, upload-time = "2026-02-22T04:11:23.245Z" },
+]
+
+[[package]]
 name = "rubikoslav"
 version = "1.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "cube-solver" },
+    { name = "rubik-solver-py" },
     { name = "typing-extensions" },
 ]
 
@@ -820,6 +835,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "cube-solver", specifier = "==1.1.4" },
+    { name = "rubik-solver-py", specifier = "==0.1.1" },
     { name = "typing-extensions", specifier = "==4.15.0" },
 ]
 

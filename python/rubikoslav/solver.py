@@ -11,6 +11,9 @@ from typing import Any, Mapping, Sequence
 
 from cube_solver import Cube as OptimalCube
 from cube_solver import Korf
+from rubik_solver import Cube as TwoPhaseCube
+from rubik_solver import init_solver as init_two_phase_solver
+from rubik_solver import solve as solve_two_phase
 
 from .CuboslavWrapper import CuboslavWrapper
 
@@ -36,8 +39,10 @@ _OPPOSITE_FACE = {"U": "D", "D": "U", "L": "R", "R": "L", "F": "B", "B": "F"}
 _SUFFIX_TO_TURNS = {"": 1, "2": 2, "'": 3}
 _TURNS_TO_SUFFIX = {1: "", 2: "2", 3: "'"}
 _INITIALIZE_LOCK = Lock()
+_TWO_PHASE_INITIALIZE_LOCK = Lock()
 _SOLVE_LOCK = Lock()
 _OPTIMAL_SOLVER: Korf | None = None
+_TWO_PHASE_INITIALIZED = False
 
 
 @dataclass(slots=True)
@@ -167,6 +172,34 @@ class Rubikoslav:
             finally:
                 os.chdir(previous_directory)
 
+    @staticmethod
+    def _initialize_two_phase() -> None:
+        """Initialize the fast bounded fallback once per process."""
+
+        global _TWO_PHASE_INITIALIZED
+        if _TWO_PHASE_INITIALIZED:
+            return
+        with _TWO_PHASE_INITIALIZE_LOCK:
+            if not _TWO_PHASE_INITIALIZED:
+                init_two_phase_solver()
+                _TWO_PHASE_INITIALIZED = True
+
+    def _solve_two_phase(
+        self,
+        values: Sequence[int],
+        search_limit: int,
+    ) -> list[str] | None:
+        """Find a bounded route with the local two-phase solver."""
+
+        self._initialize_two_phase()
+        fallback_cube = TwoPhaseCube.from_string(state_to_facelets(values))
+        validation = fallback_cube.verify()
+        if validation is not True:
+            raise ValueError(f"Two-phase facelet validation failed: {validation}")
+        with _SOLVE_LOCK:
+            fallback = solve_two_phase(fallback_cube, max_depth=search_limit)
+        return fallback.split() if fallback else None
+
     def solve(
         self,
         state: Sequence[int],
@@ -194,6 +227,26 @@ class Rubikoslav:
                 result.optimal = True
                 return result
 
+            if history_route is not None and len(history_route) <= search_limit:
+                result.moves = history_route
+                result.backend = "verified-history-route"
+                result.success = True
+                result.search_depth = len(result.moves)
+                return result
+
+            if history_route is not None and self.optimal_timeout_seconds is not None:
+                fallback = self._solve_two_phase(values, search_limit)
+                if fallback is None:
+                    raise RuntimeError(
+                        f"No solution was found within {search_limit} moves"
+                    )
+                result.moves = fallback
+                verify_route(values, result.moves)
+                result.backend = "two-phase-fallback"
+                result.success = True
+                result.search_depth = len(result.moves)
+                return result
+
             self.initialize()
             cube = OptimalCube(repr=optimal_repr)
             if cube.permutation_parity is None:
@@ -211,13 +264,15 @@ class Rubikoslav:
                     timeout=self.optimal_timeout_seconds,
                 )
             if solution is None:
-                if history_route is not None and len(history_route) <= search_limit:
-                    result.moves = history_route
-                    result.backend = "verified-history-route"
-                    result.success = True
-                    result.search_depth = len(result.moves)
-                    return result
                 if self.optimal_timeout_seconds is not None:
+                    fallback = self._solve_two_phase(values, search_limit)
+                    if fallback is not None:
+                        result.moves = fallback
+                        verify_route(values, result.moves)
+                        result.backend = "two-phase-fallback"
+                        result.success = True
+                        result.search_depth = len(result.moves)
+                        return result
                     raise RuntimeError(
                         f"Search timed out before finding a route within {search_limit} moves"
                     )

@@ -40,4 +40,4 @@ For each animated move, the browser rotates the correct nine cubies, commits the
 
 ## Hosted endpoint
 
-The local server and Vercel function share the same payload validation and Python solve function, and the visualizer always goes through that endpoint. Hosted requests get a short optimal-search budget. If a deep search times out, Python can ask C++ to verify the submitted move history, reverse and simplify it, and use that fallback only when it is no longer than 20 moves.
+The local server and Vercel function share the same payload validation and Python solve function, and the visualizer always goes through that endpoint. A verified inverse history returns immediately when it is 20 moves or fewer. Longer histories go straight to a local two-phase search with the same 20-move cap. C++ replays every returned route.

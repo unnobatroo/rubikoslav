@@ -181,7 +181,13 @@ class CliTests(unittest.TestCase):
         self.assertIn("fetch('/api/solve'", backend_client)
         self.assertIn("JSON.stringify({ state, history })", backend_client)
         self.assertIn("payload.moves.length > maxSolutionMoves", backend_client)
-        self.assertIn("by Python and C++", script)
+        self.assertIn(
+            "showMessage(`Success! Solved in ${route.length} ${moveLabel}`",
+            script,
+        )
+        self.assertNotIn("by Python and C++", script)
+        self.assertIn("showMessage('Solving...')", script)
+        self.assertNotIn("The Python engine is searching", script)
         self.assertNotIn("new Worker(", visualization_source + backend_client)
         self.assertNotIn("min2phase", visualization_source + backend_client)
         self.assertIn("showMessage('Position and move history reset.'", script)
