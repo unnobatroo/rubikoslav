@@ -2,7 +2,7 @@ name: Auto-format
 
 on:
   push:
-    branches: ["**"]
+    branches: ['**']
 
 permissions:
   contents: write
@@ -26,21 +26,23 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24"
+          node-version: '24'
           cache: npm
 
       - name: Install uv and Python
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
-          version: "0.11.28"
-          python-version: "3.12"
+          version: '0.11.28'
+          python-version: '3.12'
           enable-cache: true
 
       - name: Install TypeScript dependencies
         run: npm ci
 
       - name: Format maintained sources
-        run: scripts/format_all.sh
+        # The built-in GitHub Actions token cannot update workflow files.
+        # Local runs still format them; the bot formats every other maintained file.
+        run: scripts/format_all.sh --exclude-workflows
 
       - name: Verify formatted browser output
         run: |
@@ -50,13 +52,14 @@ jobs:
       - name: Commit formatting changes
         shell: bash
         run: |
-          if [[ -z "$(git status --porcelain)" ]]; then
+          git add --all -- . ':(top,exclude).github/workflows/**'
+
+          if git diff --cached --quiet; then
             echo "No formatting changes."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add --all
           git commit -m "style: auto-format"
           git push origin "HEAD:${GITHUB_REF_NAME}"

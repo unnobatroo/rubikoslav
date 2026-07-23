@@ -5,6 +5,20 @@ set -euo pipefail
 FORMAT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$FORMAT_ROOT"
 
+format_workflows=true
+if (($# > 1)); then
+  printf 'Usage: %s [--exclude-workflows]\n' "$0" >&2
+  exit 2
+fi
+if (($# == 1)); then
+  if [[ "$1" != "--exclude-workflows" ]]; then
+    printf 'Unknown option: %s\n' "$1" >&2
+    printf 'Usage: %s [--exclude-workflows]\n' "$0" >&2
+    exit 2
+  fi
+  format_workflows=false
+fi
+
 say() {
   printf '\n%s\n' "$1"
 }
@@ -36,11 +50,16 @@ done < <(
     -print0
 )
 
+prettier_roots=(web/src web/styles docs)
+if [[ "$format_workflows" == true ]]; then
+  prettier_roots+=(.github)
+fi
+
 web_files=()
 while IFS= read -r -d '' file; do
   web_files+=("$file")
 done < <(
-  find web/src web/styles docs .github \
+  find "${prettier_roots[@]}" \
     -type f \
     \( -name '*.ts' -o -name '*.css' -o -name '*.md' -o -name '*.yml' -o -name '*.yaml' \) \
     ! -path 'web/src/generated/*' \
