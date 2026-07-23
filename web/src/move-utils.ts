@@ -6,7 +6,14 @@ import {
 } from './generated/cube-data.js';
 
 const internalCodes = 'ABCDEFGHIJKLMNOPQR'.split('');
-const facesByCode = ['U', 'L', 'F', 'B', 'R', 'D'] as const satisfies readonly Face[];
+const facesByCode = [
+  'U',
+  'L',
+  'F',
+  'B',
+  'R',
+  'D',
+] as const satisfies readonly Face[];
 const suffixesByCode = ['', '2', "'"] as const;
 const notationByCode = Object.fromEntries(
   internalCodes.map((code, index): [string, Move] => {
@@ -34,7 +41,10 @@ export function inverse(move: Move): Move {
 }
 
 export function parseRoute(raw: string): Move[] {
-  const tokens = raw.trim().split(/[\s,]+/).filter(Boolean);
+  const tokens = raw
+    .trim()
+    .split(/[\s,]+/)
+    .filter(Boolean);
   if (!tokens.length) throw new Error('Enter at least one move.');
   return tokens.map((token) => {
     const standard = token.toUpperCase().replace('3', "'");

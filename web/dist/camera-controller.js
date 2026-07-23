@@ -21,8 +21,8 @@ export function setupCamera(scene, cube, resetButton) {
     scene.addEventListener('pointermove', (event) => {
         if (!dragOrigin)
             return;
-        rotationY = dragOrigin.rotationY + (event.clientX - dragOrigin.x) * .45;
-        rotationX = Math.max(-85, Math.min(85, dragOrigin.rotationX - (event.clientY - dragOrigin.y) * .35));
+        rotationY = dragOrigin.rotationY + (event.clientX - dragOrigin.x) * 0.45;
+        rotationX = Math.max(-85, Math.min(85, dragOrigin.rotationX - (event.clientY - dragOrigin.y) * 0.35));
         update();
     });
     scene.addEventListener('pointerup', stop);

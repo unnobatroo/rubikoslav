@@ -47,15 +47,15 @@ rubikoslav --port 8080
 rubikoslav --host 0.0.0.0 --port 8080 --no-open
 ```
 
-| Command | Behavior |
-| --- | --- |
-| `rubikoslav` | Start the local app and open it. |
-| `rubikoslav --no-open` | Start without opening a tab. |
-| `rubikoslav --port 8080` | Bind another port. |
-| `rubikoslav solve "..."` | Solve standard notation. |
-| `rubikoslav doctor` | Check native and web package assets. |
-| `rubikoslav doctor --strict` | Include a real optimal solve. |
-| `rubikoslav --version` | Print the installed version. |
+| Command                      | Behavior                             |
+| ---------------------------- | ------------------------------------ |
+| `rubikoslav`                 | Start the local app and open it.     |
+| `rubikoslav --no-open`       | Start without opening a tab.         |
+| `rubikoslav --port 8080`     | Bind another port.                   |
+| `rubikoslav solve "..."`     | Solve standard notation.             |
+| `rubikoslav doctor`          | Check native and web package assets. |
+| `rubikoslav doctor --strict` | Include a real optimal solve.        |
+| `rubikoslav --version`       | Print the installed version.         |
 
 ## What runs where
 

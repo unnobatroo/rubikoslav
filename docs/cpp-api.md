@@ -45,6 +45,6 @@ int main() {
 Public types include `Cuboslav`, `Move`, `Hash`, `CubeValidationResult`, and `Stopwatch`.
 
 !!! warning "Internal namespace"
-    `rubikoslav::detail` contains generated move constants and engine implementation details. It is not a compatibility surface.
+`rubikoslav::detail` contains generated move constants and engine implementation details. It is not a compatibility surface.
 
 Rubikoslav currently ships a standard installable CMake package, not Conan or vcpkg recipes.

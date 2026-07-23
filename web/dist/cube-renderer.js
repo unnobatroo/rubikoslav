@@ -1,11 +1,11 @@
 import { faceLayouts, } from './generated/cube-data.js';
 const turnGeometry = {
-    "U": { "coordinate": "y", "layer": -1, "axis": "Y", "direction": -1 },
-    "D": { "coordinate": "y", "layer": 1, "axis": "Y", "direction": 1 },
-    "L": { "coordinate": "x", "layer": -1, "axis": "X", "direction": -1 },
-    "R": { "coordinate": "x", "layer": 1, "axis": "X", "direction": 1 },
-    "F": { "coordinate": "z", "layer": 1, "axis": "Z", "direction": 1 },
-    "B": { "coordinate": "z", "layer": -1, "axis": "Z", "direction": -1 }
+    U: { coordinate: 'y', layer: -1, axis: 'Y', direction: -1 },
+    D: { coordinate: 'y', layer: 1, axis: 'Y', direction: 1 },
+    L: { coordinate: 'x', layer: -1, axis: 'X', direction: -1 },
+    R: { coordinate: 'x', layer: 1, axis: 'X', direction: 1 },
+    F: { coordinate: 'z', layer: 1, axis: 'Z', direction: 1 },
+    B: { coordinate: 'z', layer: -1, axis: 'Z', direction: -1 },
 };
 function faceCoordinates(face, row, column) {
     if (face === 'F')
@@ -40,11 +40,13 @@ function createCubie(coordinates, stickers) {
     cubie.dataset.x = String(x);
     cubie.dataset.y = String(y);
     cubie.dataset.z = String(z);
-    cubie.style.left = `${(x + 1) * 100 / 3}%`;
-    cubie.style.top = `${(y + 1) * 100 / 3}%`;
+    cubie.style.left = `${((x + 1) * 100) / 3}%`;
+    cubie.style.top = `${((y + 1) * 100) / 3}%`;
     const depth = z < 0
         ? 'calc(0px - var(--cubie-size))'
-        : z > 0 ? 'var(--cubie-size)' : '0px';
+        : z > 0
+            ? 'var(--cubie-size)'
+            : '0px';
     cubie.style.transform = `translateZ(${depth})`;
     ['U', 'L', 'F', 'D', 'R', 'B'].forEach((face) => {
         const side = document.createElement('div');
@@ -99,7 +101,7 @@ export class CubeRenderer {
     }
     turnDuration() {
         const playbackDelay = Number(this.playbackSpeed.value);
-        return Math.max(140, Math.min(360, playbackDelay * .58));
+        return Math.max(140, Math.min(360, playbackDelay * 0.58));
     }
     async animateTurn(move) {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches)
@@ -107,13 +109,14 @@ export class CubeRenderer {
         const geometry = turnGeometry[move[0]];
         const layer = document.createElement('div');
         layer.className = 'turn-layer';
-        const cubies = [...this.cube.querySelectorAll('.cubie')]
-            .filter((cubie) => (Number(cubie.dataset[geometry.coordinate]) === geometry.layer));
+        const cubies = [
+            ...this.cube.querySelectorAll('.cubie'),
+        ].filter((cubie) => Number(cubie.dataset[geometry.coordinate]) === geometry.layer);
         cubies.forEach((cubie) => layer.append(cubie));
         this.cube.append(layer);
         const duration = this.turnDuration();
         layer.style.transitionDuration = `${duration}ms`;
-        await new Promise((resolve) => (requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
         layer.style.transform = `rotate${geometry.axis}(${turnAngle(move)}deg)`;
         await waitForTurn(layer, duration);
     }

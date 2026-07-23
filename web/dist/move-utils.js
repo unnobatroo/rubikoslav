@@ -1,6 +1,13 @@
 import { movePermutations, } from './generated/cube-data.js';
 const internalCodes = 'ABCDEFGHIJKLMNOPQR'.split('');
-const facesByCode = ['U', 'L', 'F', 'B', 'R', 'D'];
+const facesByCode = [
+    'U',
+    'L',
+    'F',
+    'B',
+    'R',
+    'D',
+];
 const suffixesByCode = ['', '2', "'"];
 const notationByCode = Object.fromEntries(internalCodes.map((code, index) => {
     const face = facesByCode[Math.floor(index / 3)];
@@ -19,7 +26,10 @@ export function inverse(move) {
     return (move.endsWith("'") ? move[0] : `${move}'`);
 }
 export function parseRoute(raw) {
-    const tokens = raw.trim().split(/[\s,]+/).filter(Boolean);
+    const tokens = raw
+        .trim()
+        .split(/[\s,]+/)
+        .filter(Boolean);
     if (!tokens.length)
         throw new Error('Enter at least one move.');
     return tokens.map((token) => {

@@ -6,7 +6,7 @@ build-backend = "scikit_build_core.build"
 name = "rubikoslav"
 version = "1.0.3"
 description = "Verified 3x3 Rubik's Cube solver with visualisation."
-authors = [{name = "Jaloliddin Ismailov"}]
+authors = [{ name = "Jaloliddin Ismailov" }]
 readme = "README.md"
 requires-python = ">=3.10"
 license = "GPL-3.0"

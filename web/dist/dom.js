@@ -8,8 +8,8 @@ export function errorMessage(error) {
     return error instanceof Error ? error.message : String(error);
 }
 export function arraysEqual(left, right) {
-    return left.length === right.length
-        && left.every((value, index) => value === right[index]);
+    return (left.length === right.length &&
+        left.every((value, index) => value === right[index]));
 }
 export function setButtonContent(button, icon, label) {
     if (button.dataset.icon === icon && button.dataset.label === label)
