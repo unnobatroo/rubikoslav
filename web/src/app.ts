@@ -1,9 +1,5 @@
 // Browser output is compiled to web/dist/app.js; edit this TypeScript source instead.
-import {
-  solvedState,
-  type Move,
-  type Sticker,
-} from './generated/cube-data.js';
+import { solvedState, type Move, type Sticker } from './generated/cube-data.js';
 import { requestSolution } from './backend-client.js';
 import { setupCamera } from './camera-controller.js';
 import { CubeRenderer } from './cube-renderer.js';
@@ -52,16 +48,15 @@ function renderCube(): void {
   cubeRenderer.render(state);
   counter.textContent = route.length
     ? `Move ${routeIndex} of ${route.length}`
-    : arraysEqual(state, solvedState) ? 'Solved position' : 'Free turn mode';
+    : arraysEqual(state, solvedState)
+      ? 'Solved position'
+      : 'Free turn mode';
 
   updatePlayButton();
 }
 
 function renderTimeline(): void {
-  timelineView.render(
-    { route, positionMoves, routeKind, routeIndex },
-    goTo,
-  );
+  timelineView.render({ route, positionMoves, routeKind, routeIndex }, goTo);
 }
 
 function commitMove(move: Move): void {
@@ -108,7 +103,7 @@ function goTo(target: number): void {
 
 async function next(): Promise<boolean> {
   if (turning || routeIndex >= route.length) return false;
-  if (!await applyMove(route[routeIndex]!)) return false;
+  if (!(await applyMove(route[routeIndex]!))) return false;
   routeIndex += 1;
   renderTimeline();
   renderCube();
@@ -118,7 +113,7 @@ async function next(): Promise<boolean> {
 async function previous(): Promise<boolean> {
   if (turning || routeIndex <= 0) return false;
   routeIndex -= 1;
-  if (!await applyMove(inverse(route[routeIndex]!))) {
+  if (!(await applyMove(inverse(route[routeIndex]!)))) {
     routeIndex += 1;
     return false;
   }
@@ -141,7 +136,7 @@ function updatePlayButton(): void {
     setButtonContent(playButton, 'pause', 'Pause');
     playButton.setAttribute('aria-label', 'Pause solution');
   } else if (!route.length && !arraysEqual(state, solvedState)) {
-    setButtonContent(playButton, 'play', 'Solve & play');
+    setButtonContent(playButton, 'play', 'Play');
     playButton.setAttribute('aria-label', 'Solve and play current position');
   } else {
     setButtonContent(playButton, 'play', 'Play');
@@ -172,11 +167,12 @@ function startPlayback(): boolean {
 }
 
 async function togglePlayback(): Promise<void> {
-  if (solving || turning) return;
+  if (solving) return;
   if (playTimer) {
     stopPlayback();
     return;
   }
+  if (turning) return;
   if (!route.length) {
     await solveCurrentPosition(true);
     return;
@@ -184,9 +180,12 @@ async function togglePlayback(): Promise<void> {
   startPlayback();
 }
 
-function showMessage(text: string, success = false): void {
+type MessageTone = 'error' | 'neutral' | 'success';
+
+function showMessage(text: string, tone: MessageTone = 'error'): void {
   message.textContent = text;
-  message.classList.toggle('success', success);
+  message.classList.toggle('neutral', tone === 'neutral');
+  message.classList.toggle('success', tone === 'success');
 }
 
 function buildMovePad(): void {
@@ -200,55 +199,69 @@ function buildMovePad(): void {
     button.addEventListener('click', async () => {
       if (turning) return;
       clearRoute(true, route.length > 0);
-      if (!await applyMove(move)) return;
+      if (!(await applyMove(move))) return;
       positionMoves.push(move);
       renderTimeline();
-      showMessage('Position changed', true);
+      showMessage('Position changed', 'success');
     });
     pad.append(button);
   });
 }
 
-requiredElement<HTMLButtonElement>('#reset-position').addEventListener('click', () => {
-  if (turning) return;
-  stopPlayback();
-  state = [...solvedState];
-  routeStart = [...state];
-  route = [];
-  routeIndex = 0;
-  routeKind = null;
-  positionMoves = [];
-  solutionInput.value = '';
-  renderCube();
-  renderTimeline();
-  showMessage('Position and move history reset.', true);
-});
-requiredElement<HTMLButtonElement>('#scramble').addEventListener('click', () => {
-  if (turning) return;
-  state = [...solvedState];
-  const scramble = randomScramble();
-  scramble.forEach(commitMove);
-  routeStart = [...state];
-  route = [];
-  routeIndex = 0;
-  routeKind = null;
-  positionMoves = [...scramble];
-  solutionInput.value = '';
-  renderCube();
-  renderTimeline();
-  showMessage('20-move position ready. Press Solve & play to run it automatically.', true);
-});
+requiredElement<HTMLButtonElement>('#reset-position').addEventListener(
+  'click',
+  () => {
+    if (turning) return;
+    stopPlayback();
+    state = [...solvedState];
+    routeStart = [...state];
+    route = [];
+    routeIndex = 0;
+    routeKind = null;
+    positionMoves = [];
+    solutionInput.value = '';
+    renderCube();
+    renderTimeline();
+    showMessage('Position and move history reset.', 'success');
+  },
+);
+requiredElement<HTMLButtonElement>('#scramble').addEventListener(
+  'click',
+  () => {
+    if (turning) return;
+    state = [...solvedState];
+    const scramble = randomScramble();
+    scramble.forEach(commitMove);
+    routeStart = [...state];
+    route = [];
+    routeIndex = 0;
+    routeKind = null;
+    positionMoves = [...scramble];
+    solutionInput.value = '';
+    renderCube();
+    renderTimeline();
+    showMessage(
+      '20-move position ready. Press Play to run it automatically.',
+      'success',
+    );
+  },
+);
 
 function setSolvingControls(disabled: boolean): void {
-  document.querySelectorAll<HTMLButtonElement>('#move-pad button, #scramble, #open-route, #reset-position, #load-solution, #previous-move, #next-move')
-    .forEach((control) => { control.disabled = disabled; });
+  document
+    .querySelectorAll<HTMLButtonElement>(
+      '#move-pad button, #scramble, #open-route, #reset-position, #load-solution, #previous-move, #next-move',
+    )
+    .forEach((control) => {
+      control.disabled = disabled;
+    });
   playButton.disabled = disabled;
 }
 
 async function solveCurrentPosition(autoplay = false): Promise<boolean> {
   if (solving) return false;
   if (arraysEqual(state, solvedState)) {
-    showMessage('The cube is already solved.', true);
+    showMessage('The cube is already solved.', 'success');
     return false;
   }
 
@@ -262,7 +275,7 @@ async function solveCurrentPosition(autoplay = false): Promise<boolean> {
   setSolvingControls(true);
   renderTimeline();
   renderCube();
-  showMessage('Solving...');
+  showMessage('Solving...', 'neutral');
   try {
     const payload = await requestSolution(capturedState, positionMoves);
     state = [...capturedState];
@@ -272,7 +285,7 @@ async function solveCurrentPosition(autoplay = false): Promise<boolean> {
     routeIndex = 0;
     renderTimeline();
     const moveLabel = route.length === 1 ? 'move' : 'moves';
-    showMessage(`Success! Solved in ${route.length} ${moveLabel}`, true);
+    showMessage(`Success! Solved in ${route.length} ${moveLabel}`, 'success');
     solved = true;
   } catch (error) {
     showMessage(errorMessage(error));
@@ -285,11 +298,14 @@ async function solveCurrentPosition(autoplay = false): Promise<boolean> {
   return solved;
 }
 
-requiredElement<HTMLButtonElement>('#open-route').addEventListener('click', () => {
-  routeMessage.textContent = '';
-  routeDialog.showModal();
-  requestAnimationFrame(() => solutionInput.focus());
-});
+requiredElement<HTMLButtonElement>('#open-route').addEventListener(
+  'click',
+  () => {
+    routeMessage.textContent = '';
+    routeDialog.showModal();
+    requestAnimationFrame(() => solutionInput.focus());
+  },
+);
 
 function closeRouteDialog(): void {
   routeDialog.close();
@@ -305,33 +321,57 @@ routeForm.addEventListener('submit', (event) => {
     stopPlayback();
     renderTimeline();
     renderCube();
-    showMessage(`Loaded ${route.length} move${route.length === 1 ? '' : 's'}.`, true);
+    showMessage(
+      `Loaded ${route.length} move${route.length === 1 ? '' : 's'}.`,
+      'success',
+    );
     closeRouteDialog();
   } catch (error) {
     routeMessage.textContent = errorMessage(error);
   }
 });
-requiredElement<HTMLButtonElement>('#cancel-route').addEventListener('click', closeRouteDialog);
-requiredElement<HTMLButtonElement>('#cancel-route-top').addEventListener('click', closeRouteDialog);
-requiredElement<HTMLButtonElement>('#next-move').addEventListener('click', () => { void next(); });
-requiredElement<HTMLButtonElement>('#previous-move').addEventListener('click', () => { void previous(); });
-playButton.addEventListener('click', () => { void togglePlayback(); });
+requiredElement<HTMLButtonElement>('#cancel-route').addEventListener(
+  'click',
+  closeRouteDialog,
+);
+requiredElement<HTMLButtonElement>('#cancel-route-top').addEventListener(
+  'click',
+  closeRouteDialog,
+);
+requiredElement<HTMLButtonElement>('#next-move').addEventListener(
+  'click',
+  () => {
+    void next();
+  },
+);
+requiredElement<HTMLButtonElement>('#previous-move').addEventListener(
+  'click',
+  () => {
+    void previous();
+  },
+);
+playButton.addEventListener('click', () => {
+  void togglePlayback();
+});
 playbackSpeed.addEventListener('change', () => {
-  if (playTimer) { stopPlayback(); startPlayback(); }
+  if (playTimer) {
+    stopPlayback();
+    startPlayback();
+  }
 });
 
 window.addEventListener('keydown', (event) => {
-  if (event.target instanceof Element && event.target.matches('select, input')) return;
+  if (event.target instanceof Element && event.target.matches('select, input'))
+    return;
   if (event.key === 'ArrowRight') void next();
   if (event.key === 'ArrowLeft') void previous();
-  if (event.key === ' ') { event.preventDefault(); void togglePlayback(); }
+  if (event.key === ' ') {
+    event.preventDefault();
+    void togglePlayback();
+  }
 });
 
-setupCamera(
-  scene,
-  cube,
-  requiredElement<HTMLButtonElement>('#reset-view'),
-);
+setupCamera(scene, cube, requiredElement<HTMLButtonElement>('#reset-view'));
 buildMovePad();
 renderCube();
 renderTimeline();

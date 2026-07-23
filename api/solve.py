@@ -40,10 +40,7 @@ _STATIC_FILES = {
     / "dist"
     / "generated"
     / "cube-data.js",
-    **{
-        f"/styles/{name}": _WEB_DIRECTORY / "styles" / name
-        for name in _STYLE_FILES
-    },
+    **{f"/styles/{name}": _WEB_DIRECTORY / "styles" / name for name in _STYLE_FILES},
 }
 
 

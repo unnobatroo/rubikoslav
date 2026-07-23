@@ -38,7 +38,8 @@ std::string generatedModule() {
             "  readonly center: Sticker;\n"
             "  readonly stickers: readonly (number | null)[];\n"
             "}\n\n";
-  output << "// Browser output is compiled to web/dist/generated/cube-data.js.\n";
+  output
+      << "// Browser output is compiled to web/dist/generated/cube-data.js.\n";
   output << "export const solvedState = [";
   for (std::size_t i = 0; i < rubikoslav::detail::solvedCube.size(); ++i) {
     if (i != 0)

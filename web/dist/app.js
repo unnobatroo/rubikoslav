@@ -1,5 +1,5 @@
 // Browser output is compiled to web/dist/app.js; edit this TypeScript source instead.
-import { solvedState, } from './generated/cube-data.js';
+import { solvedState } from './generated/cube-data.js';
 import { requestSolution } from './backend-client.js';
 import { setupCamera } from './camera-controller.js';
 import { CubeRenderer } from './cube-renderer.js';
@@ -34,7 +34,9 @@ function renderCube() {
     cubeRenderer.render(state);
     counter.textContent = route.length
         ? `Move ${routeIndex} of ${route.length}`
-        : arraysEqual(state, solvedState) ? 'Solved position' : 'Free turn mode';
+        : arraysEqual(state, solvedState)
+            ? 'Solved position'
+            : 'Free turn mode';
     updatePlayButton();
 }
 function renderTimeline() {
@@ -88,7 +90,7 @@ function goTo(target) {
 async function next() {
     if (turning || routeIndex >= route.length)
         return false;
-    if (!await applyMove(route[routeIndex]))
+    if (!(await applyMove(route[routeIndex])))
         return false;
     routeIndex += 1;
     renderTimeline();
@@ -99,7 +101,7 @@ async function previous() {
     if (turning || routeIndex <= 0)
         return false;
     routeIndex -= 1;
-    if (!await applyMove(inverse(route[routeIndex]))) {
+    if (!(await applyMove(inverse(route[routeIndex])))) {
         routeIndex += 1;
         return false;
     }
@@ -123,7 +125,7 @@ function updatePlayButton() {
         playButton.setAttribute('aria-label', 'Pause solution');
     }
     else if (!route.length && !arraysEqual(state, solvedState)) {
-        setButtonContent(playButton, 'play', 'Solve & play');
+        setButtonContent(playButton, 'play', 'Play');
         playButton.setAttribute('aria-label', 'Solve and play current position');
     }
     else {
@@ -154,21 +156,24 @@ function startPlayback() {
     return true;
 }
 async function togglePlayback() {
-    if (solving || turning)
+    if (solving)
         return;
     if (playTimer) {
         stopPlayback();
         return;
     }
+    if (turning)
+        return;
     if (!route.length) {
         await solveCurrentPosition(true);
         return;
     }
     startPlayback();
 }
-function showMessage(text, success = false) {
+function showMessage(text, tone = 'error') {
     message.textContent = text;
-    message.classList.toggle('success', success);
+    message.classList.toggle('neutral', tone === 'neutral');
+    message.classList.toggle('success', tone === 'success');
 }
 function buildMovePad() {
     const pad = requiredElement('#move-pad');
@@ -182,11 +187,11 @@ function buildMovePad() {
             if (turning)
                 return;
             clearRoute(true, route.length > 0);
-            if (!await applyMove(move))
+            if (!(await applyMove(move)))
                 return;
             positionMoves.push(move);
             renderTimeline();
-            showMessage('Position changed', true);
+            showMessage('Position changed', 'success');
         });
         pad.append(button);
     });
@@ -204,7 +209,7 @@ requiredElement('#reset-position').addEventListener('click', () => {
     solutionInput.value = '';
     renderCube();
     renderTimeline();
-    showMessage('Position and move history reset.', true);
+    showMessage('Position and move history reset.', 'success');
 });
 requiredElement('#scramble').addEventListener('click', () => {
     if (turning)
@@ -220,18 +225,21 @@ requiredElement('#scramble').addEventListener('click', () => {
     solutionInput.value = '';
     renderCube();
     renderTimeline();
-    showMessage('20-move position ready. Press Solve & play to run it automatically.', true);
+    showMessage('20-move position ready. Press Play to run it automatically.', 'success');
 });
 function setSolvingControls(disabled) {
-    document.querySelectorAll('#move-pad button, #scramble, #open-route, #reset-position, #load-solution, #previous-move, #next-move')
-        .forEach((control) => { control.disabled = disabled; });
+    document
+        .querySelectorAll('#move-pad button, #scramble, #open-route, #reset-position, #load-solution, #previous-move, #next-move')
+        .forEach((control) => {
+        control.disabled = disabled;
+    });
     playButton.disabled = disabled;
 }
 async function solveCurrentPosition(autoplay = false) {
     if (solving)
         return false;
     if (arraysEqual(state, solvedState)) {
-        showMessage('The cube is already solved.', true);
+        showMessage('The cube is already solved.', 'success');
         return false;
     }
     const capturedState = [...state];
@@ -244,7 +252,7 @@ async function solveCurrentPosition(autoplay = false) {
     setSolvingControls(true);
     renderTimeline();
     renderCube();
-    showMessage('Solving...');
+    showMessage('Solving...', 'neutral');
     try {
         const payload = await requestSolution(capturedState, positionMoves);
         state = [...capturedState];
@@ -254,7 +262,7 @@ async function solveCurrentPosition(autoplay = false) {
         routeIndex = 0;
         renderTimeline();
         const moveLabel = route.length === 1 ? 'move' : 'moves';
-        showMessage(`Success! Solved in ${route.length} ${moveLabel}`, true);
+        showMessage(`Success! Solved in ${route.length} ${moveLabel}`, 'success');
         solved = true;
     }
     catch (error) {
@@ -287,7 +295,7 @@ routeForm.addEventListener('submit', (event) => {
         stopPlayback();
         renderTimeline();
         renderCube();
-        showMessage(`Loaded ${route.length} move${route.length === 1 ? '' : 's'}.`, true);
+        showMessage(`Loaded ${route.length} move${route.length === 1 ? '' : 's'}.`, 'success');
         closeRouteDialog();
     }
     catch (error) {
@@ -296,9 +304,15 @@ routeForm.addEventListener('submit', (event) => {
 });
 requiredElement('#cancel-route').addEventListener('click', closeRouteDialog);
 requiredElement('#cancel-route-top').addEventListener('click', closeRouteDialog);
-requiredElement('#next-move').addEventListener('click', () => { void next(); });
-requiredElement('#previous-move').addEventListener('click', () => { void previous(); });
-playButton.addEventListener('click', () => { void togglePlayback(); });
+requiredElement('#next-move').addEventListener('click', () => {
+    void next();
+});
+requiredElement('#previous-move').addEventListener('click', () => {
+    void previous();
+});
+playButton.addEventListener('click', () => {
+    void togglePlayback();
+});
 playbackSpeed.addEventListener('change', () => {
     if (playTimer) {
         stopPlayback();

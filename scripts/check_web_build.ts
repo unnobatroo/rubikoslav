@@ -30,12 +30,14 @@ const styleFiles = [
   'dialogs.css',
   'responsive.css',
 ];
-const expectedStyleEntry = styleFiles
-  .map((file) => `@import url('./styles/${file}');`)
-  .join('\n') + '\n';
+const expectedStyleEntry =
+  styleFiles.map((file) => `@import url('./styles/${file}');`).join('\n') +
+  '\n';
 const styleEntry = await readFile(resolve('web/styles.css'), 'utf8');
 if (styleEntry !== expectedStyleEntry) {
-  throw new Error('web/styles.css must import each ordered CSS module exactly once.');
+  throw new Error(
+    'web/styles.css must import each ordered CSS module exactly once.',
+  );
 }
 for (const file of styleFiles) {
   const contents = await readFile(resolve('web/styles', file), 'utf8');

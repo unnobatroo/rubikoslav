@@ -22,9 +22,11 @@ export class TimelineView {
     const showingRoute = route.length > 0;
     const moves = showingRoute ? route : positionMoves;
     this.label.textContent = showingRoute
-      ? routeKind === 'custom' ? 'Loaded route' : 'Solution'
+      ? routeKind === 'custom'
+        ? 'Loaded route'
+        : 'Solution'
       : 'Your moves';
-    this.count.textContent = `${moves.length} move${moves.length === 1 ? '' : 's'}`;
+    this.count.textContent = String(moves.length);
     this.timeline.classList.toggle('position-history', !showingRoute);
 
     if (!moves.length) {
@@ -64,12 +66,14 @@ export class TimelineView {
     if (!active) return;
     const timelineBounds = this.timeline.getBoundingClientRect();
     const activeBounds = active.getBoundingClientRect();
-    const centeredTop = (
-      this.timeline.scrollTop
-      + activeBounds.top
-      - timelineBounds.top
-      - (this.timeline.clientHeight - activeBounds.height) / 2
-    );
-    this.timeline.scrollTo({ top: Math.max(0, centeredTop), behavior: 'smooth' });
+    const centeredTop =
+      this.timeline.scrollTop +
+      activeBounds.top -
+      timelineBounds.top -
+      (this.timeline.clientHeight - activeBounds.height) / 2;
+    this.timeline.scrollTo({
+      top: Math.max(0, centeredTop),
+      behavior: 'smooth',
+    });
   }
 }

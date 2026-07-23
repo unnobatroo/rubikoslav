@@ -11,13 +11,12 @@
 }
 
 .cube-scene::before {
-  content: "";
+  content: '';
   position: absolute;
   width: min(54vw, 560px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle at 44% 38%, #1b2025 0, #11161a 58%, #090c0f 74%);
-  box-shadow: inset 0 0 70px rgba(0, 0, 0, .52);
+  background: var(--surface);
   transform: translateY(var(--circle-lift));
   pointer-events: none;
 }
@@ -35,7 +34,7 @@
   z-index: 2;
   transform-style: preserve-3d;
   transform: translateY(var(--cube-lift)) rotateX(-14deg) rotateY(-36deg);
-  transition: transform .12s ease-out;
+  transition: transform 0.12s ease-out;
 }
 
 .turn-layer {
@@ -43,7 +42,7 @@
   inset: 0;
   transform-style: preserve-3d;
   transition-property: transform;
-  transition-timing-function: cubic-bezier(.22, .72, .16, 1);
+  transition-timing-function: cubic-bezier(0.22, 0.72, 0.16, 1);
 }
 
 .cubie {
@@ -62,38 +61,38 @@
   backface-visibility: hidden;
 }
 
-.cubie-side[data-face="F"] {
+.cubie-side[data-face='F'] {
   transform: translateZ(calc(var(--cubie-size) / 2));
 }
 
-.cubie-side[data-face="B"] {
+.cubie-side[data-face='B'] {
   transform: rotateY(180deg) translateZ(calc(var(--cubie-size) / 2));
 }
 
-.cubie-side[data-face="R"] {
+.cubie-side[data-face='R'] {
   transform: rotateY(90deg) translateZ(calc(var(--cubie-size) / 2));
 }
 
-.cubie-side[data-face="L"] {
+.cubie-side[data-face='L'] {
   transform: rotateY(-90deg) translateZ(calc(var(--cubie-size) / 2));
 }
 
-.cubie-side[data-face="U"] {
+.cubie-side[data-face='U'] {
   transform: rotateX(90deg) translateZ(calc(var(--cubie-size) / 2));
 }
 
-.cubie-side[data-face="D"] {
+.cubie-side[data-face='D'] {
   transform: rotateX(-90deg) translateZ(calc(var(--cubie-size) / 2));
 }
 
 .sticker {
   width: 100%;
   height: 100%;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
-    inset 0 0 18px rgba(255, 255, 255, .1),
-    0 1px 2px rgba(0, 0, 0, .5);
+    inset 0 0 18px rgba(255, 255, 255, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .color-0 {
@@ -128,11 +127,9 @@
   width: fit-content;
   margin: 0;
   padding: 5px 10px;
-  background: rgba(7, 9, 11, .54);
-  color: #747b84;
-  font: 650 9px ui-monospace, monospace;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+  background: var(--bg);
+  color: var(--muted);
+  font: 500 11px var(--mono);
   transform: translateX(-50%);
 }
 
@@ -145,32 +142,38 @@
 }
 
 .play {
-  display: inline-grid;
-  grid-template-columns: 16px auto 16px;
-  column-gap: 8px;
-  min-width: 156px;
-  height: 44px;
-  padding: 0 22px;
-  background: var(--lime);
-  color: #0b0e07;
-  font-weight: 850;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 142px;
+  height: 40px;
+  padding: 0 18px;
+  background: var(--highlight);
+  color: var(--text);
+  border: 1px solid var(--line);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
   white-space: nowrap;
-  clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
-  box-shadow: 0 0 0 1px var(--lime), 0 10px 28px rgba(197, 255, 46, .11);
 }
 
-.play::after {
-  content: "";
-  width: 16px;
+.play .button-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.play > span {
+  line-height: 1;
 }
 
 .play:hover {
-  background: #d1ff58;
-  box-shadow: 0 12px 34px rgba(197, 255, 46, .2);
+  background: var(--highlight);
+  border-color: var(--text);
 }
 
-.play[data-icon="loader"] .button-icon {
-  animation: icon-spin .8s linear infinite;
+.play[data-icon='loader'] .button-icon {
+  animation: icon-spin 0.8s linear infinite;
 }
 
 @keyframes icon-spin {
@@ -180,21 +183,25 @@
 }
 
 .speed-control {
-  margin-left: 12px;
+  margin-left: auto;
   display: flex;
   gap: 8px;
   align-items: center;
   color: var(--muted);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: .08em;
+  font: 500 12px var(--mono);
 }
 
 select {
-  background: var(--panel-2);
+  appearance: none;
+  background: var(--bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3 6l5 5 5-5' stroke='%23111' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
   color: var(--text);
   border: 1px solid var(--line);
-  padding: 8px;
+  padding: 8px 34px 8px 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.3;
 }
-
-

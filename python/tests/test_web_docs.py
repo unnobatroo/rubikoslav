@@ -25,7 +25,9 @@ class WebDocsTests(unittest.TestCase):
         self.assertIn('class="creator-link"', index)
 
         style_entry = (directory / "styles.css").read_text(encoding="utf-8")
-        style_modules = re.findall(r"@import url\('./styles/(.+?\.css)'\);", style_entry)
+        style_modules = re.findall(
+            r"@import url\('./styles/(.+?\.css)'\);", style_entry
+        )
         self.assertEqual(len(style_modules), 6)
         for module in style_modules:
             route = f"/styles/{module}"

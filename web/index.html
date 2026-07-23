@@ -1,237 +1,309 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Rubikoslav is a Rubik's Cube solver with verified routes and 3D playback"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%23c8ff38%22/><rect x=%222%22 y=%222%22 width=%225%22 height=%225%22 fill=%22%23111%22/></svg>"
+    />
+    <title>Rubikoslav</title>
+    <link rel="stylesheet" href="styles.css?v=12" />
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Rubikoslav is a Rubik's Cube solver with verified routes and 3D playback">
-  <link rel="icon"
-    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%23c8ff38%22/><rect x=%222%22 y=%222%22 width=%225%22 height=%225%22 fill=%22%230a0b0d%22/></svg>">
-  <title>Rubikoslav</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-
-<body>
-  <svg class="icon-sprite" aria-hidden="true">
-    <symbol id="icon-refresh" viewBox="0 0 24 24">
-      <path d="M20 11a8 8 0 1 0 1 4"></path>
-      <path d="M20 4v7h-7"></path>
-    </symbol>
-    <symbol id="icon-shuffle" viewBox="0 0 24 24">
-      <path d="M4 7h3c4 0 6 10 10 10h3"></path>
-      <path d="m17 14 3 3-3 3"></path>
-      <path d="M4 17h3c1.7 0 2.8-1.6 3.8-3.7M13.2 10.7C14.2 8.6 15.3 7 17 7h3"></path>
-      <path d="m17 4 3 3-3 3"></path>
-    </symbol>
-    <symbol id="icon-route" viewBox="0 0 24 24">
-      <circle cx="6" cy="18" r="2"></circle>
-      <circle cx="18" cy="6" r="2"></circle>
-      <path d="M8 18h3a3 3 0 0 0 3-3V9a3 3 0 0 1 3-3"></path>
-    </symbol>
-    <symbol id="icon-reset" viewBox="0 0 24 24">
-      <path d="M4 10a8 8 0 1 1 2 8"></path>
-      <path d="M4 4v6h6"></path>
-    </symbol>
-    <symbol id="icon-chevron-left" viewBox="0 0 24 24">
-      <path d="m15 18-6-6 6-6"></path>
-    </symbol>
-    <symbol id="icon-chevron-right" viewBox="0 0 24 24">
-      <path d="m9 18 6-6-6-6"></path>
-    </symbol>
-    <symbol id="icon-play" viewBox="0 0 24 24">
-      <path d="m9 6 9 6-9 6Z"></path>
-    </symbol>
-    <symbol id="icon-pause" viewBox="0 0 24 24">
-      <path d="M9 7v10M15 7v10"></path>
-    </symbol>
-    <symbol id="icon-loader" viewBox="0 0 24 24">
-      <path d="M20 12a8 8 0 1 1-2.3-5.7"></path>
-      <path d="M18 3v4h-4"></path>
-    </symbol>
-    <symbol id="icon-speed" viewBox="0 0 24 24">
-      <path d="M5 17a8 8 0 1 1 14 0"></path>
-      <path d="m12 14 4-4"></path>
-    </symbol>
-    <symbol id="icon-package" viewBox="0 0 24 24">
-      <path d="m7.5 4.27 9 5.15"></path>
-      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
-      <path d="m3.3 7 8.7 5 8.7-5M12 22V12"></path>
-    </symbol>
-    <symbol id="icon-book" viewBox="0 0 24 24">
-      <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H11v17H7.5A3.5 3.5 0 0 0 4 22Z"></path>
-      <path d="M20 5.5A3.5 3.5 0 0 0 16.5 2H13v17h3.5A3.5 3.5 0 0 1 20 22Z"></path>
-    </symbol>
-    <symbol id="icon-github" viewBox="0 0 24 24">
-      <path
-        d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7A5.4 5.4 0 0 0 19.4 4 5 5 0 0 0 19.3.5S18.2.1 15 1.8a13.4 13.4 0 0 0-7 0C4.8.1 3.7.5 3.7.5A5 5 0 0 0 3.6 4a5.4 5.4 0 0 0-1.4 3.7c0 5.3 3.5 6.5 6.8 7a4.8 4.8 0 0 0-1 3.5v4">
-      </path>
-      <path d="M8 19c-3 .9-3-1.5-4-2"></path>
-    </symbol>
-    <symbol id="icon-close" viewBox="0 0 24 24">
-      <path d="m7 7 10 10M17 7 7 17"></path>
-    </symbol>
-  </svg>
-  <main>
-    <section class="workspace">
-      <div class="stage-panel">
-        <div class="stage-toolbar">
-          <div class="stage-status">
-            <a class="brand-lockup" href="/" aria-label="Rubikoslav home">
-              <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-                <rect width="32" height="32"></rect>
-                <rect class="brand-mark-cutout" x="5" y="5" width="10" height="10"></rect>
-              </svg>
-              <span>Rubikoslav</span>
-            </a>
-            <span id="move-counter" class="counter">Solved position</span>
-          </div>
-          <div class="view-actions">
-            <button id="reset-view" class="icon-button" type="button" title="Reset camera" aria-label="Reset camera">
-              <svg class="button-icon" aria-hidden="true">
-                <use href="#icon-refresh"></use>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div id="cube-scene" class="cube-scene" role="group" aria-label="Interactive 3D Rubik's Cube">
-          <div id="cube" class="cube"></div>
-        </div>
-
-        <p class="drag-hint">Drag to rotate the view</p>
-
-      </div>
-
-      <aside class="control-panel">
-        <section class="control-section">
-          <div class="section-heading">
-            <h2>Make a position</h2>
-            <div class="section-actions">
-              <button id="scramble" class="secondary-button" type="button">
-                <svg class="button-icon" aria-hidden="true">
-                  <use href="#icon-shuffle"></use>
+  <body>
+    <svg class="icon-sprite" aria-hidden="true">
+      <symbol id="icon-refresh" viewBox="0 0 24 24">
+        <path d="M20 11a8 8 0 1 0 1 4"></path>
+        <path d="M20 4v7h-7"></path>
+      </symbol>
+      <symbol id="icon-shuffle" viewBox="0 0 24 24">
+        <path d="M4 7h3c4 0 6 10 10 10h3"></path>
+        <path d="m17 14 3 3-3 3"></path>
+        <path
+          d="M4 17h3c1.7 0 2.8-1.6 3.8-3.7M13.2 10.7C14.2 8.6 15.3 7 17 7h3"
+        ></path>
+        <path d="m17 4 3 3-3 3"></path>
+      </symbol>
+      <symbol id="icon-route" viewBox="0 0 24 24">
+        <circle cx="6" cy="18" r="2"></circle>
+        <circle cx="18" cy="6" r="2"></circle>
+        <path d="M8 18h3a3 3 0 0 0 3-3V9a3 3 0 0 1 3-3"></path>
+      </symbol>
+      <symbol id="icon-reset" viewBox="0 0 24 24">
+        <path d="M4 10a8 8 0 1 1 2 8"></path>
+        <path d="M4 4v6h6"></path>
+      </symbol>
+      <symbol id="icon-chevron-left" viewBox="0 0 24 24">
+        <path d="m15 18-6-6 6-6"></path>
+      </symbol>
+      <symbol id="icon-chevron-right" viewBox="0 0 24 24">
+        <path d="m9 18 6-6-6-6"></path>
+      </symbol>
+      <symbol id="icon-play" viewBox="0 0 24 24">
+        <path d="m9 6 9 6-9 6Z"></path>
+      </symbol>
+      <symbol id="icon-pause" viewBox="0 0 24 24">
+        <path d="M9 7v10M15 7v10"></path>
+      </symbol>
+      <symbol id="icon-loader" viewBox="0 0 24 24">
+        <path d="M20 12a8 8 0 1 1-2.3-5.7"></path>
+        <path d="M18 3v4h-4"></path>
+      </symbol>
+      <symbol id="icon-speed" viewBox="0 0 24 24">
+        <path d="M5 17a8 8 0 1 1 14 0"></path>
+        <path d="m12 14 4-4"></path>
+      </symbol>
+      <symbol id="icon-package" viewBox="0 0 24 24">
+        <path d="m7.5 4.27 9 5.15"></path>
+        <path
+          d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"
+        ></path>
+        <path d="m3.3 7 8.7 5 8.7-5M12 22V12"></path>
+      </symbol>
+      <symbol id="icon-book" viewBox="0 0 24 24">
+        <path
+          d="M4 5.5A3.5 3.5 0 0 1 7.5 2H11v17H7.5A3.5 3.5 0 0 0 4 22Z"
+        ></path>
+        <path
+          d="M20 5.5A3.5 3.5 0 0 0 16.5 2H13v17h3.5A3.5 3.5 0 0 1 20 22Z"
+        ></path>
+      </symbol>
+      <symbol id="icon-github" viewBox="0 0 24 24">
+        <path
+          d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7A5.4 5.4 0 0 0 19.4 4 5 5 0 0 0 19.3.5S18.2.1 15 1.8a13.4 13.4 0 0 0-7 0C4.8.1 3.7.5 3.7.5A5 5 0 0 0 3.6 4a5.4 5.4 0 0 0-1.4 3.7c0 5.3 3.5 6.5 6.8 7a4.8 4.8 0 0 0-1 3.5v4"
+        ></path>
+        <path d="M8 19c-3 .9-3-1.5-4-2"></path>
+      </symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24">
+        <path d="m7 7 10 10M17 7 7 17"></path>
+      </symbol>
+    </svg>
+    <main>
+      <section class="workspace">
+        <div class="stage-panel">
+          <div class="stage-toolbar">
+            <div class="stage-status">
+              <a class="brand-lockup" href="/" aria-label="Rubikoslav home">
+                <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+                  <rect width="32" height="32"></rect>
+                  <rect
+                    class="brand-mark-cutout"
+                    x="5"
+                    y="5"
+                    width="10"
+                    height="10"
+                  ></rect>
                 </svg>
-                <span>Scramble</span>
-              </button>
-              <button id="open-route" class="secondary-button" type="button">
+                <span>Rubikoslav</span>
+              </a>
+              <span id="move-counter" class="counter">Solved position</span>
+            </div>
+            <div class="view-actions">
+              <button
+                id="reset-view"
+                class="icon-button"
+                type="button"
+                title="Reset camera"
+                aria-label="Reset camera"
+              >
                 <svg class="button-icon" aria-hidden="true">
-                  <use href="#icon-route"></use>
+                  <use href="#icon-refresh"></use>
                 </svg>
-                <span>Load route</span>
               </button>
             </div>
           </div>
-          <div id="move-pad" class="move-pad"></div>
-          <div class="move-feed">
-            <div class="move-feed-heading">
-              <div class="move-feed-meta">
-                <span id="timeline-label">Your moves</span>
-                <span id="timeline-count">0 moves</span>
+
+          <div
+            id="cube-scene"
+            class="cube-scene"
+            role="group"
+            aria-label="Interactive 3D Rubik's Cube"
+          >
+            <div id="cube" class="cube"></div>
+          </div>
+
+          <p class="drag-hint">Drag to rotate the view</p>
+        </div>
+
+        <aside class="control-panel">
+          <section class="control-section">
+            <div class="section-heading">
+              <h2>Make a position</h2>
+              <div class="section-actions">
+                <button id="scramble" class="secondary-button" type="button">
+                  <svg class="button-icon" aria-hidden="true">
+                    <use href="#icon-shuffle"></use>
+                  </svg>
+                  <span>Scramble</span>
+                </button>
+                <button id="open-route" class="secondary-button" type="button">
+                  <svg class="button-icon" aria-hidden="true">
+                    <use href="#icon-route"></use>
+                  </svg>
+                  <span>Load route</span>
+                </button>
               </div>
-              <button id="reset-position" class="feed-reset" type="button" title="Reset cube and clear moves">
-                <svg class="button-icon" aria-hidden="true">
-                  <use href="#icon-reset"></use>
-                </svg>
-                <span>Reset</span>
-              </button>
             </div>
-            <div id="timeline" class="timeline" role="log" aria-label="Move timeline" aria-live="polite"></div>
-          </div>
-          <div class="playback" role="group" aria-label="Solution playback controls">
-            <button id="previous-move" class="transport" type="button" aria-label="Previous move">
-              <svg class="button-icon" aria-hidden="true">
-                <use href="#icon-chevron-left"></use>
-              </svg>
-            </button>
-            <button id="play-solution" class="play" type="button" aria-label="Solve and play current position">
-              <svg class="button-icon" aria-hidden="true">
-                <use href="#icon-play"></use>
-              </svg>
-              <span>Play</span>
-            </button>
-            <button id="next-move" class="transport" type="button" aria-label="Next move">
-              <svg class="button-icon" aria-hidden="true">
-                <use href="#icon-chevron-right"></use>
-              </svg>
-            </button>
-            <label class="speed-control">
-              <svg class="button-icon" aria-hidden="true">
-                <use href="#icon-speed"></use>
-              </svg>
-              <span>Speed</span>
-              <select id="playback-speed">
-                <option value="900">Slow</option>
-                <option value="500" selected>Normal</option>
-                <option value="240">Fast</option>
-              </select>
-            </label>
-          </div>
-          <p id="input-message" class="input-message" role="status"></p>
-          <footer class="control-footer">
-            <nav class="resource-links" aria-label="Project resources">
-              <a href="https://unnobatroo.github.io/rubikoslav/">
+            <div id="move-pad" class="move-pad"></div>
+            <div class="move-feed">
+              <div class="move-feed-heading">
+                <div class="move-feed-meta">
+                  <span id="timeline-label">Your moves</span>
+                  <span id="timeline-count">0</span>
+                </div>
+                <button
+                  id="reset-position"
+                  class="feed-reset"
+                  type="button"
+                  title="Reset cube and clear moves"
+                >
+                  <svg class="button-icon" aria-hidden="true">
+                    <use href="#icon-reset"></use>
+                  </svg>
+                  <span>Reset</span>
+                </button>
+              </div>
+              <div
+                id="timeline"
+                class="timeline"
+                role="log"
+                aria-label="Move timeline"
+                aria-live="polite"
+              ></div>
+            </div>
+            <div
+              class="playback"
+              role="group"
+              aria-label="Solution playback controls"
+            >
+              <button
+                id="previous-move"
+                class="transport"
+                type="button"
+                aria-label="Previous move"
+              >
                 <svg class="button-icon" aria-hidden="true">
-                  <use href="#icon-book"></use>
+                  <use href="#icon-chevron-left"></use>
                 </svg>
-                <span>Wiki</span>
-              </a>
-              <a href="https://pypi.org/project/rubikoslav/">
+              </button>
+              <button
+                id="play-solution"
+                class="play"
+                type="button"
+                aria-label="Solve and play current position"
+              >
                 <svg class="button-icon" aria-hidden="true">
-                  <use href="#icon-package"></use>
+                  <use href="#icon-play"></use>
                 </svg>
-                <span>Package</span>
-              </a>
-              <a href="https://github.com/unnobatroo/rubikoslav">
+                <span>Play</span>
+              </button>
+              <button
+                id="next-move"
+                class="transport"
+                type="button"
+                aria-label="Next move"
+              >
                 <svg class="button-icon" aria-hidden="true">
-                  <use href="#icon-github"></use>
+                  <use href="#icon-chevron-right"></use>
                 </svg>
-                <span>Source</span>
-              </a>
-            </nav>
-            <a class="creator-link" href="https://jalols.page" rel="author">By Jaloliddin Ismailov</a>
-          </footer>
-        </section>
-      </aside>
-    </section>
-  </main>
+              </button>
+              <label class="speed-control">
+                <svg class="button-icon" aria-hidden="true">
+                  <use href="#icon-speed"></use>
+                </svg>
+                <select id="playback-speed" aria-label="Playback speed">
+                  <option value="900">Slow</option>
+                  <option value="500" selected>Normal</option>
+                  <option value="240">Fast</option>
+                </select>
+              </label>
+            </div>
+            <p id="input-message" class="input-message" role="status"></p>
+            <footer class="control-footer">
+              <nav class="resource-links" aria-label="Project resources">
+                <a href="https://unnobatroo.github.io/rubikoslav/">
+                  <svg class="button-icon" aria-hidden="true">
+                    <use href="#icon-book"></use>
+                  </svg>
+                  <span>Wiki</span>
+                </a>
+                <a href="https://pypi.org/project/rubikoslav/">
+                  <svg class="button-icon" aria-hidden="true">
+                    <use href="#icon-package"></use>
+                  </svg>
+                  <span>Package</span>
+                </a>
+                <a href="https://github.com/unnobatroo/rubikoslav">
+                  <svg class="button-icon" aria-hidden="true">
+                    <use href="#icon-github"></use>
+                  </svg>
+                  <span>Source</span>
+                </a>
+              </nav>
+              <a class="creator-link" href="https://jalols.page" rel="author"
+                >By Jaloliddin Ismailov</a
+              >
+            </footer>
+          </section>
+        </aside>
+      </section>
+    </main>
 
-  <dialog id="route-dialog">
-    <form id="route-form">
-      <div class="dialog-heading">
-        <h2>
-          <svg class="button-icon" aria-hidden="true">
-            <use href="#icon-route"></use>
-          </svg>
-          <span>Load your own route</span>
-        </h2>
-        <button id="cancel-route-top" class="icon-button" type="button" aria-label="Close route loader">
-          <svg class="button-icon" aria-hidden="true">
-            <use href="#icon-close"></use>
-          </svg>
-        </button>
-      </div>
-      <p>Use notation such as <code>R U R' U'</code>. Unambiguous compact engine codes work too.</p>
-      <label for="solution-input">Route</label>
-      <input id="solution-input" type="text" spellcheck="false" autocomplete="off" placeholder="R U R' U' F2">
-      <p id="route-message" class="input-message" role="status"></p>
-      <div class="inline-actions dialog-actions">
-        <button id="load-solution" class="primary-button" type="submit">
-          <svg class="button-icon" aria-hidden="true">
-            <use href="#icon-route"></use>
-          </svg>
-          <span>Load route</span>
-        </button>
-        <button id="cancel-route" class="secondary-button" type="button">
-          <svg class="button-icon" aria-hidden="true">
-            <use href="#icon-close"></use>
-          </svg>
-          <span>Cancel</span>
-        </button>
-      </div>
-    </form>
-  </dialog>
+    <dialog id="route-dialog">
+      <form id="route-form">
+        <div class="dialog-heading">
+          <h2>
+            <svg class="button-icon" aria-hidden="true">
+              <use href="#icon-route"></use>
+            </svg>
+            <span>Load your own route</span>
+          </h2>
+          <button
+            id="cancel-route-top"
+            class="icon-button"
+            type="button"
+            aria-label="Close route loader"
+          >
+            <svg class="button-icon" aria-hidden="true">
+              <use href="#icon-close"></use>
+            </svg>
+          </button>
+        </div>
+        <p>
+          Use notation such as <code>R U R' U'</code>. Unambiguous compact
+          engine codes work too.
+        </p>
+        <label for="solution-input">Route</label>
+        <input
+          id="solution-input"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder="R U R' U' F2"
+        />
+        <p id="route-message" class="input-message" role="status"></p>
+        <div class="inline-actions dialog-actions">
+          <button id="load-solution" class="primary-button" type="submit">
+            <svg class="button-icon" aria-hidden="true">
+              <use href="#icon-route"></use>
+            </svg>
+            <span>Load route</span>
+          </button>
+          <button id="cancel-route" class="secondary-button" type="button">
+            <svg class="button-icon" aria-hidden="true">
+              <use href="#icon-close"></use>
+            </svg>
+            <span>Cancel</span>
+          </button>
+        </div>
+      </form>
+    </dialog>
 
-  <script type="module" src="dist/app.js"></script>
-</body>
-
+    <script type="module" src="dist/app.js"></script>
+  </body>
 </html>

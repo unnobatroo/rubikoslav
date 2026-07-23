@@ -78,7 +78,9 @@ class CliTests(unittest.TestCase):
         timeline_view = (ROOT / "web" / "src" / "timeline-view.ts").read_text(
             encoding="utf-8"
         )
-        visualization_source = script + camera + cube_renderer + dom + move_utils + timeline_view
+        visualization_source = (
+            script + camera + cube_renderer + dom + move_utils + timeline_view
+        )
         styles = visualizer_styles()
 
         self.assertNotIn('id="state-output"', html)
@@ -129,6 +131,9 @@ class CliTests(unittest.TestCase):
         self.assertNotIn("border-top", playback_styles)
         self.assertIn('id="timeline-label"', html)
         self.assertIn('id="timeline-count"', html)
+        self.assertIn('<span id="timeline-count">0</span>', html)
+        self.assertNotIn('<span id="timeline-count">0 moves</span>', html)
+        self.assertIn("this.count.textContent = String(moves.length)", timeline_view)
         self.assertGreater(
             html.index('id="reset-position"'),
             html.index('class="move-feed-heading"'),
@@ -141,6 +146,9 @@ class CliTests(unittest.TestCase):
         self.assertIn('id="icon-shuffle"', html)
         self.assertIn('id="icon-route"', html)
         self.assertIn('id="icon-play"', html)
+        self.assertNotIn("<span>Speed</span>", html)
+        self.assertIn('aria-label="Playback speed"', html)
+        self.assertIn(".speed-control {\n  margin-left: auto", styles)
         self.assertIn("setButtonContent(playButton, 'pause', 'Pause')", script)
         self.assertIn("bottom: 22px", styles)
         self.assertIn(".cube-scene::before", styles)
@@ -157,7 +165,27 @@ class CliTests(unittest.TestCase):
         self.assertIn("grid-template-rows: auto minmax(456px, 1fr)", styles)
         self.assertIn("container-type: inline-size", styles)
         self.assertIn("@container (max-width: 370px)", styles)
-        self.assertIn("grid-template-columns: 40px minmax(0, 1fr) 40px", styles)
+        self.assertIn("grid-template-columns: 36px minmax(0, 1fr) 36px", styles)
+        self.assertIn("grid-template-columns: repeat(3, minmax(0, 1fr))", styles)
+        self.assertIn("--cube-size: min(64vw, 240px)", styles)
+        phone_styles = styles[
+            styles.index("@media (max-width: 560px) {") : styles.index(
+                "@media (prefers-reduced-motion: reduce)"
+            )
+        ]
+        self.assertIn(".section-heading {\n    display: grid", phone_styles)
+        self.assertIn(
+            ".section-actions {\n    width: 100%;\n    max-width: none;\n    display: grid",
+            phone_styles,
+        )
+        self.assertIn(
+            ".timeline {\n    min-height: 96px;\n    max-height: 196px;",
+            phone_styles,
+        )
+        self.assertIn(
+            ".resource-links {\n    width: 100%;\n    display: grid",
+            phone_styles,
+        )
         self.assertNotIn("  height: 456px;", styles)
         self.assertIn("--cube-lift: -66px", styles)
         self.assertIn("--cube-lift: -42px", styles)
@@ -167,25 +195,40 @@ class CliTests(unittest.TestCase):
         self.assertIn("translateY(var(--cube-lift)) rotateX", camera)
         self.assertIn("let positionMoves: Move[] = []", script)
         self.assertIn("positionMoves.push(move)", script)
+        playback_toggle = script[
+            script.index("async function togglePlayback") : script.index(
+                "function showMessage"
+            )
+        ]
+        self.assertLess(
+            playback_toggle.index("if (playTimer)"),
+            playback_toggle.index("if (turning)"),
+        )
         move_handler = script[
-            script.index("button.addEventListener('click', async () => {") :
-            script.index("pad.append(button);")
+            script.index(
+                "button.addEventListener('click', async () => {"
+            ) : script.index("pad.append(button);")
         ]
         self.assertLess(
             move_handler.index("await applyMove(move)"),
             move_handler.index("positionMoves.push(move)"),
         )
-        self.assertIn("if (solving || turning) return", script)
+        self.assertIn("if (solving) return", playback_toggle)
+        self.assertIn("if (turning) return", playback_toggle)
         self.assertIn("requestSolution(capturedState, positionMoves)", script)
         self.assertIn("fetch('/api/solve'", backend_client)
         self.assertIn("JSON.stringify({ state, history })", backend_client)
         self.assertIn("payload.moves.length > maxSolutionMoves", backend_client)
         self.assertIn(
-            "showMessage(`Success! Solved in ${route.length} ${moveLabel}`",
+            "`Success! Solved in ${route.length} ${moveLabel}`",
             script,
         )
+        self.assertIn("'success'", script)
+        self.assertIn("showMessage('Solving...', 'neutral')", script)
+        self.assertIn(".input-message.neutral", styles)
+        self.assertIn("color: var(--text) !important", styles)
+        self.assertIn("background: var(--highlight)", styles)
         self.assertNotIn("by Python and C++", script)
-        self.assertIn("showMessage('Solving...')", script)
         self.assertNotIn("The Python engine is searching", script)
         self.assertNotIn("new Worker(", visualization_source + backend_client)
         self.assertNotIn("min2phase", visualization_source + backend_client)
@@ -198,9 +241,7 @@ class CliTests(unittest.TestCase):
             "type SolveResponse = SolveSuccess | SolveFailure", backend_client
         )
         self.assertIn("function requiredElement<T extends Element>", dom)
-        self.assertIn(
-            "function parseSolveResponse(value: unknown)", backend_client
-        )
+        self.assertIn("function parseSolveResponse(value: unknown)", backend_client)
         self.assertIn(
             "window.matchMedia('(min-width: 561px) and (pointer: fine)')",
             camera,

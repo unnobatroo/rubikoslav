@@ -98,9 +98,35 @@ class SolverTests(unittest.TestCase):
 
     def test_web_fallback_solves_the_reported_twenty_nine_move_position(self) -> None:
         history = [
-            "F2", "D", "B", "F2", "L'", "B2", "F'", "F", "U", "B",
-            "D", "R2", "F2", "B2", "L2", "L", "L'", "B'", "D'", "D2",
-            "F2", "B2", "U2", "R2", "R", "L2", "U2", "F2", "D2",
+            "F2",
+            "D",
+            "B",
+            "F2",
+            "L'",
+            "B2",
+            "F'",
+            "F",
+            "U",
+            "B",
+            "D",
+            "R2",
+            "F2",
+            "B2",
+            "L2",
+            "L",
+            "L'",
+            "B'",
+            "D'",
+            "D2",
+            "F2",
+            "B2",
+            "U2",
+            "R2",
+            "R",
+            "L2",
+            "U2",
+            "F2",
+            "D2",
         ]
         cube = CuboslavWrapper()
         for move in history:
@@ -119,8 +145,26 @@ class SolverTests(unittest.TestCase):
 
     def test_twenty_move_history_is_an_accepted_bounded_fallback(self) -> None:
         history = [
-            "R", "U", "F2", "L'", "D", "B2", "R2", "U'", "F", "D2",
-            "L", "B'", "U2", "R'", "F'", "L2", "D'", "B", "R2", "U",
+            "R",
+            "U",
+            "F2",
+            "L'",
+            "D",
+            "B2",
+            "R2",
+            "U'",
+            "F",
+            "D2",
+            "L",
+            "B'",
+            "U2",
+            "R'",
+            "F'",
+            "L2",
+            "D'",
+            "B",
+            "R2",
+            "U",
         ]
         cube = CuboslavWrapper()
         for move in history:

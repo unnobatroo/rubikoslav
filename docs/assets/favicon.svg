@@ -1,4 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" role="img" aria-label="Rubikoslav mark">
-  <rect width="16" height="16" fill="#c8ff38"/>
-  <rect x="2" y="2" width="5" height="5" fill="#0a0b0d"/>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 16 16"
+  role="img"
+  aria-label="Rubikoslav mark"
+>
+  <rect width="16" height="16" fill="#c8ff38" />
+  <rect x="2" y="2" width="5" height="5" fill="#111" />
 </svg>
