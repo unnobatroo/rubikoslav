@@ -87,7 +87,10 @@ def run_doctor(strict: bool = False) -> int:
 
 def serve_visualizer(host: str, port: int, open_browser: bool) -> int:
     directory = web_directory()
-    solver = Rubikoslav(optimal_timeout_seconds=2)
+    solver = Rubikoslav(
+        optimal_timeout_seconds=2,
+        allow_long_history_route=True,
+    )
 
     class VisualizerHandler(QuietStaticHandler):
         def __init__(self, *args: object, **kwargs: object) -> None:

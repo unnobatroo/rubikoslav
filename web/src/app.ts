@@ -180,11 +180,10 @@ async function togglePlayback(): Promise<void> {
   startPlayback();
 }
 
-type MessageTone = 'error' | 'neutral' | 'success';
+type MessageTone = 'error' | 'success';
 
 function showMessage(text: string, tone: MessageTone = 'error'): void {
   message.textContent = text;
-  message.classList.toggle('neutral', tone === 'neutral');
   message.classList.toggle('success', tone === 'success');
 }
 
@@ -275,7 +274,7 @@ async function solveCurrentPosition(autoplay = false): Promise<boolean> {
   setSolvingControls(true);
   renderTimeline();
   renderCube();
-  showMessage('Solving...', 'neutral');
+  showMessage('');
   try {
     const payload = await requestSolution(capturedState, positionMoves);
     state = [...capturedState];

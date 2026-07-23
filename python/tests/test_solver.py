@@ -96,52 +96,132 @@ class SolverTests(unittest.TestCase):
             verify_route(state, result.moves)
         self.assertEqual(result.backend, "optimal-ida-star")
 
-    def test_web_fallback_solves_the_reported_twenty_nine_move_position(self) -> None:
-        history = [
-            "F2",
-            "D",
-            "B",
-            "F2",
-            "L'",
-            "B2",
-            "F'",
-            "F",
-            "U",
-            "B",
-            "D",
-            "R2",
-            "F2",
-            "B2",
-            "L2",
-            "L",
-            "L'",
-            "B'",
-            "D'",
-            "D2",
-            "F2",
-            "B2",
-            "U2",
-            "R2",
-            "R",
-            "L2",
-            "U2",
-            "F2",
-            "D2",
+    def test_web_verified_histories_do_not_launch_a_long_search(self) -> None:
+        histories = [
+            [
+                "F2",
+                "D",
+                "B",
+                "F2",
+                "L'",
+                "B2",
+                "F'",
+                "F",
+                "U",
+                "B",
+                "D",
+                "R2",
+                "F2",
+                "B2",
+                "L2",
+                "L",
+                "L'",
+                "B'",
+                "D'",
+                "D2",
+                "F2",
+                "B2",
+                "U2",
+                "R2",
+                "R",
+                "L2",
+                "U2",
+                "F2",
+                "D2",
+            ],
+            [
+                "U'",
+                "U",
+                "B'",
+                "D2",
+                "R2",
+                "B2",
+                "U",
+                "L'",
+                "R'",
+                "F'",
+                "B2",
+                "F2",
+                "U2",
+                "L",
+                "B",
+                "F2",
+                "R2",
+                "D'",
+                "L2",
+                "U2",
+                "L'",
+                "B",
+                "F2",
+                "R",
+                "R'",
+                "B",
+                "F2",
+                "F'",
+                "B",
+                "B2",
+                "D2",
+            ],
+            [
+                "L",
+                "D",
+                "F'",
+                "D2",
+                "R",
+                "U",
+                "B",
+                "R",
+                "D",
+                "L'",
+                "R2",
+                "B2",
+                "L2",
+                "R",
+                "B'",
+                "F2",
+                "U'",
+                "B2",
+                "D'",
+                "L2",
+                "F'",
+                "U",
+                "F",
+                "R",
+                "D2",
+                "B2",
+                "L",
+                "U'",
+                "U2",
+                "R2",
+                "B",
+                "F2",
+            ],
         ]
-        cube = CuboslavWrapper()
-        for move in history:
-            cube.move(move)
-
-        status, payload = solve_payload(
-            {"state": cube.getCube(), "history": history},
-            Rubikoslav(optimal_timeout_seconds=0),
+        solver = Rubikoslav(
+            optimal_timeout_seconds=0,
+            allow_long_history_route=True,
         )
 
-        self.assertEqual(status, 200, payload)
-        self.assertTrue(payload["success"], payload)
-        self.assertEqual(payload["backend"], "two-phase-fallback")
-        self.assertLessEqual(len(payload["moves"]), MAX_SOLUTION_MOVES)
-        verify_route(cube.getCube(), payload["moves"])
+        for history in histories:
+            cube = CuboslavWrapper()
+            for move in history:
+                cube.move(move)
+
+            status, payload = solve_payload(
+                {"state": cube.getCube(), "history": history},
+                solver,
+            )
+
+            self.assertEqual(status, 200, payload)
+            self.assertTrue(payload["success"], payload)
+            self.assertEqual(payload["backend"], "verified-history-route")
+            self.assertEqual(
+                payload["moves"],
+                verified_history_route(cube.getCube(), history),
+            )
+            verify_route(cube.getCube(), payload["moves"])
+
+        self.assertGreater(len(payload["moves"]), MAX_SOLUTION_MOVES)
 
     def test_twenty_move_history_is_an_accepted_bounded_fallback(self) -> None:
         history = [

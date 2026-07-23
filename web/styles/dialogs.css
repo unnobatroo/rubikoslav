@@ -25,12 +25,12 @@ input {
   line-height: 1.3;
 }
 
-.input-message.success {
-  color: var(--text) !important;
+.input-message:empty {
+  display: none;
 }
 
-.input-message.neutral {
-  color: var(--muted) !important;
+.input-message.success {
+  color: var(--text) !important;
 }
 
 dialog {

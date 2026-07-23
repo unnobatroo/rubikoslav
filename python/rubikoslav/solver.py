@@ -138,10 +138,15 @@ def verified_history_route(state: Sequence[int], history: Sequence[str]) -> list
 
 
 class Rubikoslav:
-    """Public solver that accepts only verified routes within 20 HTM moves."""
+    """Solve cube states and native-verify every accepted route."""
 
-    def __init__(self, optimal_timeout_seconds: int | None = None) -> None:
+    def __init__(
+        self,
+        optimal_timeout_seconds: int | None = None,
+        allow_long_history_route: bool = False,
+    ) -> None:
         self.optimal_timeout_seconds = optimal_timeout_seconds
+        self.allow_long_history_route = allow_long_history_route
 
     @staticmethod
     def initialize(verbose: bool = False) -> None:
@@ -227,7 +232,11 @@ class Rubikoslav:
                 result.optimal = True
                 return result
 
-            if history_route is not None and len(history_route) <= search_limit:
+            history_route_allowed = history_route is not None and (
+                len(history_route) <= search_limit
+                or (self.allow_long_history_route and max_depth is None)
+            )
+            if history_route_allowed:
                 result.moves = history_route
                 result.backend = "verified-history-route"
                 result.success = True

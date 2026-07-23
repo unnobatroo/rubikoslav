@@ -31,13 +31,14 @@ print(result.backend)  # "verified-history-route"
 
 `solve_scramble()` is the practical entry point when your application knows how the position was created. For ordinary short scrambles, Rubikoslav verifies and simplifies the inverse route instead of starting an expensive optimal search.
 
-If your application receives an arbitrary cube state and needs the shortest route, build or load the state with `CuboslavWrapper` and call `solve(state)`. That path uses the optimal IDA* backend and may initialize a local search cache on first use.
+If your application receives an arbitrary cube state and needs the shortest route, build or load the state with `CuboslavWrapper` and call `solve(state)`. That path uses the optimal IDA\* backend and may initialize a local search cache on first use.
 
 ## Contract
 
 - Python 3.10 or newer.
 - Standard notation: `U D L R F B`, with optional `2` or `'` suffixes.
-- Every returned solution is at most 20 moves in the half-turn metric.
+- Arbitrary-state and explicitly depth-limited solutions are at most 20 moves in the half-turn metric.
+- The visualizer may return a longer verified undo route for a position created through its own controls instead of starting an unbounded search.
 - `R2` counts as one move, just like `R` and `R'`.
 - Expected solve failures are returned as `SolveResult(success=False, error=...)`.
 - Accepted routes are replayed through the native C++ cube before `success=True` is returned.
@@ -45,11 +46,11 @@ If your application receives an arbitrary cube state and needs the shortest rout
 
 ## Choose your path
 
-| You have | Use | Typical backend |
-| --- | --- | --- |
-| A scramble such as `"R U F2"` | `solve_scramble()` | Verified inverse history |
-| A state created with `CuboslavWrapper` | `solve(state)` | Optimal IDA* |
-| A latency limit | `Rubikoslav(optimal_timeout_seconds=...)` | Optimal search, then bounded two-phase fallback |
-| A terminal or local demo | `rubikoslav solve ...` or `rubikoslav` | Same Python/native package |
+| You have                               | Use                                       | Typical backend                                 |
+| -------------------------------------- | ----------------------------------------- | ----------------------------------------------- |
+| A scramble such as `"R U F2"`          | `solve_scramble()`                        | Verified inverse history                        |
+| A state created with `CuboslavWrapper` | `solve(state)`                            | Optimal IDA\*                                   |
+| A latency limit                        | `Rubikoslav(optimal_timeout_seconds=...)` | Optimal search, then bounded two-phase fallback |
+| A terminal or local demo               | `rubikoslav solve ...` or `rubikoslav`    | Same Python/native package                      |
 
 Continue with [installation and quickstart](getting-started.md), then use the [Python API reference](python-api.md) for the exact behavior and result fields.

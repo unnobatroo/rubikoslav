@@ -3,7 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/rubikoslav?label=PyPI)](https://pypi.org/project/rubikoslav/)
 [![Wiki](https://img.shields.io/badge/docs-wiki-2878EB?logo=materialformkdocs&logoColor=white)](https://unnobatroo.github.io/rubikoslav/)
 
-Rubikoslav solves 3×3 Rubik's Cubes through a Python API, a CLI, and an animated browser visualiser, all backed by a C++20 cube engine. It only returns solutions of 20 moves or fewer in the half-turn metric, and the engine replays every route before accepting it.
+Rubikoslav solves 3×3 Rubik's Cubes through a Python API, a CLI, and an animated browser visualiser, all backed by a C++20 cube engine. Arbitrary-state and depth-limited solutions are capped at 20 moves in the half-turn metric; the visualiser can instead replay a longer native-verified undo route for positions created through its own controls.
 
 ## Install the package
 

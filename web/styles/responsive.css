@@ -229,17 +229,18 @@
 
   .resource-links {
     width: 100%;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 10px 20px;
   }
 
   .resource-links a {
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .creator-link {
-    justify-self: center;
+    justify-self: start;
   }
 
   dialog form {

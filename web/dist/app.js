@@ -172,7 +172,6 @@ async function togglePlayback() {
 }
 function showMessage(text, tone = 'error') {
     message.textContent = text;
-    message.classList.toggle('neutral', tone === 'neutral');
     message.classList.toggle('success', tone === 'success');
 }
 function buildMovePad() {
@@ -252,7 +251,7 @@ async function solveCurrentPosition(autoplay = false) {
     setSolvingControls(true);
     renderTimeline();
     renderCube();
-    showMessage('Solving...', 'neutral');
+    showMessage('');
     try {
         const payload = await requestSolution(capturedState, positionMoves);
         state = [...capturedState];

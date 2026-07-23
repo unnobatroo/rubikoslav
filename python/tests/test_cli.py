@@ -183,7 +183,7 @@ class CliTests(unittest.TestCase):
             phone_styles,
         )
         self.assertIn(
-            ".resource-links {\n    width: 100%;\n    display: grid",
+            ".resource-links {\n    width: 100%;\n    display: flex",
             phone_styles,
         )
         self.assertNotIn("  height: 456px;", styles)
@@ -218,14 +218,16 @@ class CliTests(unittest.TestCase):
         self.assertIn("requestSolution(capturedState, positionMoves)", script)
         self.assertIn("fetch('/api/solve'", backend_client)
         self.assertIn("JSON.stringify({ state, history })", backend_client)
-        self.assertIn("payload.moves.length > maxSolutionMoves", backend_client)
+        self.assertNotIn("maxSolutionMoves", backend_client)
         self.assertIn(
             "`Success! Solved in ${route.length} ${moveLabel}`",
             script,
         )
         self.assertIn("'success'", script)
-        self.assertIn("showMessage('Solving...', 'neutral')", script)
-        self.assertIn(".input-message.neutral", styles)
+        self.assertIn("showMessage('')", script)
+        self.assertIn(".input-message:empty", styles)
+        self.assertNotIn("showMessage('Solving...", script)
+        self.assertNotIn(".input-message.neutral", styles)
         self.assertIn("color: var(--text) !important", styles)
         self.assertIn("background: var(--highlight)", styles)
         self.assertNotIn("by Python and C++", script)

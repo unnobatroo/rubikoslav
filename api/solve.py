@@ -15,7 +15,10 @@ if os.environ.get("VERCEL"):
 
 from rubikoslav import Rubikoslav, solve_payload
 
-_SOLVER = Rubikoslav(optimal_timeout_seconds=2)
+_SOLVER = Rubikoslav(
+    optimal_timeout_seconds=2,
+    allow_long_history_route=True,
+)
 _WEB_DIRECTORY = Path(__file__).resolve().parents[1] / "web"
 _STYLE_FILES = (
     "foundation.css",

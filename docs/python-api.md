@@ -7,15 +7,20 @@ from rubikoslav import CuboslavWrapper, Rubikoslav, SolveResult
 ```
 
 !!! note "Typing"
-    The Python source uses type annotations, but the distribution does not currently declare itself as a PEP 561 typed package. Strict type checkers may treat imports as untyped unless your project supplies local stubs.
+The Python source uses type annotations, but the distribution does not currently declare itself as a PEP 561 typed package. Strict type checkers may treat imports as untyped unless your project supplies local stubs.
 
 ## `Rubikoslav`
 
 ```python
-Rubikoslav(optimal_timeout_seconds: int | None = None)
+Rubikoslav(
+    optimal_timeout_seconds: int | None = None,
+    allow_long_history_route: bool = False,
+)
 ```
 
 `optimal_timeout_seconds=None` means arbitrary-state optimal search has no timeout. Set a timeout when bounded response time matters; if optimal search times out, Rubikoslav tries the local two-phase backend and still rejects routes above 20 moves.
+
+`allow_long_history_route=True` is intended for an interactive visualizer that already knows every move used to create the submitted state. When no explicit `max_depth` is supplied, Rubikoslav may return the native-verified, simplified inverse history even when it exceeds 20 moves. This avoids launching a potentially long search merely to shorten a route that is already known to solve the cube.
 
 ### `solve_scramble()`
 
@@ -58,7 +63,7 @@ state = cube.getCube()
 result = Rubikoslav().solve(state)
 ```
 
-With no `history`, the default backend is optimal IDA*. With a matching history, the solver can return its verified inverse or use the bounded fallback when a timeout is configured.
+With no `history`, the default backend is optimal IDA\*. With a matching history, the solver can return its verified inverse or use the bounded fallback when a timeout is configured.
 
 Do not invent the 48 integers manually unless you also implement Rubikoslav's sticker ordering. Prefer `CuboslavWrapper.getCube()` or persist a state previously returned by that method. Native validation rejects malformed and physically impossible states.
 
@@ -103,15 +108,15 @@ class SolveResult:
     optimal: bool
 ```
 
-| Field | Contract |
-| --- | --- |
-| `success` | `True` only after native route replay reaches the solved state. |
-| `moves` | Standard notation, never more than 20 HTM moves. Empty on failure or for an already solved state. |
-| `error` | Human-readable failure detail; empty on success. |
-| `search_depth` | Number of moves accepted from the selected backend. |
-| `elapsed_microseconds` | End-to-end time spent inside the solve call. |
-| `backend` | `verified-history-route`, `optimal-ida-star`, or `two-phase-fallback`. |
-| `optimal` | Whether the shortest route was proven, not merely whether the solve succeeded. |
+| Field                  | Contract                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `success`              | `True` only after native route replay reaches the solved state.                                   |
+| `moves`                | Standard notation, never more than 20 HTM moves. Empty on failure or for an already solved state. |
+| `error`                | Human-readable failure detail; empty on success.                                                  |
+| `search_depth`         | Number of moves accepted from the selected backend.                                               |
+| `elapsed_microseconds` | End-to-end time spent inside the solve call.                                                      |
+| `backend`              | `verified-history-route`, `optimal-ida-star`, or `two-phase-fallback`.                            |
+| `optimal`              | Whether the shortest route was proven, not merely whether the solve succeeded.                    |
 
 ```python
 result = Rubikoslav().solve_scramble("R U F2")
@@ -138,7 +143,7 @@ payload = asdict(result)
 
 ### `verified-history-route`
 
-The submitted history is replayed to confirm it produces the state. Rubikoslav reverses and safely simplifies it, then native-replays the answer. This is normally the fastest path and does not claim optimality.
+The submitted history is replayed to confirm it produces the state. Rubikoslav reverses and safely simplifies it, then native-replays the answer. This is normally the fastest path and does not claim optimality. With `allow_long_history_route=True` and no explicit `max_depth`, this route may exceed 20 moves.
 
 ### `optimal-ida-star`
 
@@ -146,7 +151,7 @@ The solver receives an arbitrary state, initializes or loads its pruning tables,
 
 ### `two-phase-fallback`
 
-Used when a configured optimal timeout expires or a long verified history needs a bounded route. It is local to the Python process, remains capped at 20 moves, and does not claim optimality.
+Used when a configured optimal timeout expires. It is local to the Python process, remains capped at 20 moves, and does not claim optimality.
 
 ## `CuboslavWrapper`
 
@@ -161,12 +166,12 @@ state = cube.getCube()
 cube.set_cube(state)
 ```
 
-| Method | Purpose |
-| --- | --- |
-| `move(notation)` | Apply `U D L R F B` with optional `2` or `'`. |
-| `getCube()` | Return the current 48-sticker state. |
-| `set_cube(state)` | Validate and load a 48-sticker state. |
-| `move_code(code)` | Apply one compact engine move code. |
+| Method            | Purpose                                       |
+| ----------------- | --------------------------------------------- |
+| `move(notation)`  | Apply `U D L R F B` with optional `2` or `'`. |
+| `getCube()`       | Return the current 48-sticker state.          |
+| `set_cube(state)` | Validate and load a 48-sticker state.         |
+| `move_code(code)` | Apply one compact engine move code.           |
 
 The camel-case `getCube()` name is retained by the native binding for compatibility.
 

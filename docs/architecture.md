@@ -24,15 +24,15 @@ flowchart LR
 
 ### Known-history path
 
-When a caller supplies `history`, Rubikoslav native-replays it to prove that it creates the submitted state. It reverses and simplifies the history and accepts it only when it fits the requested depth. This is the usual `solve_scramble()` path.
+When a caller supplies `history`, Rubikoslav native-replays it to prove that it creates the submitted state. It reverses and simplifies the history and normally accepts it only when it fits the requested depth. The visualizer enables `allow_long_history_route`, so a position created through its controls can use the verified undo route immediately instead of starting a potentially long shortening search.
 
 ### Optimal path
 
-An arbitrary state with no history is translated into the search library's representation. The Korf IDA* backend loads or generates local transition and pruning tables, then searches up to 20 HTM moves.
+An arbitrary state with no history is translated into the search library's representation. The Korf IDA\* backend loads or generates local transition and pruning tables, then searches up to 20 HTM moves.
 
 ### Bounded fallback
 
-When `optimal_timeout_seconds` is configured, an optimal timeout can fall back to the process-local two-phase solver. Long verified histories in the web path use the same fallback directly. Every answer remains subject to the same 20-move gate and native replay.
+When `optimal_timeout_seconds` is configured, an optimal timeout can fall back to the process-local two-phase solver. Arbitrary-state and explicitly depth-limited answers remain subject to the 20-move gate and native replay.
 
 ## Native layer
 

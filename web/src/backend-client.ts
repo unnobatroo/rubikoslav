@@ -18,8 +18,6 @@ interface SolveFailure {
 
 type SolveResponse = SolveSuccess | SolveFailure;
 
-const maxSolutionMoves = 20;
-
 function isMove(value: string): value is Move {
   return Object.hasOwn(movePermutations, value);
 }
@@ -34,12 +32,11 @@ function parseSolveResponse(value: unknown): SolveResponse {
     return { success: false, error: payload.error };
   }
   if (
-    payload.success !== true
-    || !Array.isArray(payload.moves)
-    || !payload.moves.every((move) => typeof move === 'string' && isMove(move))
-    || payload.moves.length > maxSolutionMoves
-    || typeof payload.elapsedMicroseconds !== 'number'
-    || typeof payload.optimal !== 'boolean'
+    payload.success !== true ||
+    !Array.isArray(payload.moves) ||
+    !payload.moves.every((move) => typeof move === 'string' && isMove(move)) ||
+    typeof payload.elapsedMicroseconds !== 'number' ||
+    typeof payload.optimal !== 'boolean'
   ) {
     throw new Error('The Python solver returned an invalid response.');
   }
